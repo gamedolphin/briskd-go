@@ -28,20 +28,27 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"github.com/piot/briskd-go/src/communication"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/endpoint"
+	"github.com/piot/brook-go/src/instream"
 )
 
 type Connection struct {
-	endpoint *endpoint.Endpoint
-	nonce    uint32
-	id       connection.ID
-	server   *Server
+	endpoint       *endpoint.Endpoint
+	nonce          uint32
+	id             connection.ID
+	userConnection communication.Connection
+	server         *Server
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
 	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce}
 	return c
+}
+
+func (c *Connection) SetUserConnection(userConnection communication.Connection) {
+	c.userConnection = userConnection
 }
 
 func (self *Connection) Addr() *endpoint.Endpoint {
@@ -50,6 +57,12 @@ func (self *Connection) Addr() *endpoint.Endpoint {
 
 func (self *Connection) ID() connection.ID {
 	return self.id
+}
+
+func (self *Connection) handleStream(stream *instream.InStream) error {
+	fmt.Printf("<< %s %s\n", self, stream)
+	self.userConnection.HandleStream(stream)
+	return nil
 }
 
 func (c *Connection) String() string {

@@ -32,6 +32,6 @@ import (
 
 func main() {
 	fmt.Printf("briskd 0.1 booting\n")
-	instance := server.New()
+	instance := server.New(nil)
 	instance.Forever()
 }

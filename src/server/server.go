@@ -27,15 +27,16 @@ package server
 
 import (
 	"fmt"
-	"github.com/piot/brook-go/src/instream"
-	"github.com/piot/brook-go/src/outstream"
 	"github.com/piot/briskd-go/src/commandcreator"
 	"github.com/piot/briskd-go/src/commands"
+	"github.com/piot/briskd-go/src/communication"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/endpoint"
 	"github.com/piot/briskd-go/src/message"
 	"github.com/piot/briskd-go/src/packet"
 	"github.com/piot/briskd-go/src/sequence"
+	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 
 	"net"
 	"time"
@@ -44,6 +45,7 @@ import (
 type Server struct {
 	connection  *net.UDPConn
 	connections map[connection.ID]*Connection
+	userServer  communication.Server
 }
 
 func (server *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
@@ -78,6 +80,8 @@ func (server *Server) challenge(addr *endpoint.Endpoint, challengeMessage *comma
 		if err != nil {
 			return err
 		}
+		userConnection := server.userServer.CreateConnection(newConnection.ID())
+		newConnection.SetUserConnection(userConnection)
 		response := commands.NewChallengeResponseMessage(challengeMessage.ClientDeterminedNonce, newConnection.ID())
 		server.SendMessageToEndpoint(addr, response)
 	} else {
@@ -126,7 +130,7 @@ func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 			if findConnectionErr != nil {
 				return findConnectionErr
 			}
-			handleErr := connection.handleMessage(msg)
+			handleErr := connection.handleStream(&inStream)
 			if handleErr != nil {
 				return handleErr
 			}
@@ -136,8 +140,8 @@ func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 	return nil
 }
 
-func New() Server {
-	return Server{connections: make(map[connection.ID]*Connection)}
+func New(userServer communication.Server) Server {
+	return Server{connections: make(map[connection.ID]*Connection), userServer: userServer}
 }
 
 func (server *Server) handleIncomingUDP() {
@@ -173,11 +177,6 @@ func headerAndMessageToStream(header *packet.PacketHeader, message2 message.Mess
 	message2.Serialize(stream)
 
 	return stream
-}
-
-func (self *Connection) handleMessage(msg message.Message) error {
-	fmt.Printf("<< %s %s\n", self, msg)
-	return nil
 }
 
 func (server *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 message.Message) {
