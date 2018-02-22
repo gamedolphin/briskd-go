@@ -28,9 +28,9 @@ package commandcreator
 import (
 	"fmt"
 	"github.com/piot/brook-go/src/instream"
-	"github.com/piot/fluxd-go/src/commands"
-	"github.com/piot/fluxd-go/src/message"
-	"github.com/piot/fluxd-go/src/packet"
+	"github.com/piot/briskd-go/src/commands"
+	"github.com/piot/briskd-go/src/message"
+	"github.com/piot/briskd-go/src/packet"
 )
 
 func createMessageFromStream(oobType packet.PacketCmd) message.Message {

@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
-	"github.com/piot/fluxd-go/src/packet"
+	"github.com/piot/briskd-go/src/packet"
 )
 
 type ChallengeMessage struct {

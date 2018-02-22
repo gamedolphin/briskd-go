@@ -28,8 +28,8 @@ package packet
 import (
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
-	"github.com/piot/fluxd-go/src/connection"
-	"github.com/piot/fluxd-go/src/sequence"
+	"github.com/piot/briskd-go/src/connection"
+	"github.com/piot/briskd-go/src/sequence"
 )
 
 type PacketHeader struct {

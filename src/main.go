@@ -27,11 +27,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/piot/fluxd-go/src/server"
+	"github.com/piot/briskd-go/src/server"
 )
 
 func main() {
-	fmt.Printf("fluxd 0.1 booting\n")
+	fmt.Printf("briskd 0.1 booting\n")
 	instance := server.New()
 	instance.Forever()
 }

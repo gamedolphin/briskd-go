@@ -28,8 +28,8 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"github.com/piot/fluxd-go/src/connection"
-	"github.com/piot/fluxd-go/src/endpoint"
+	"github.com/piot/briskd-go/src/connection"
+	"github.com/piot/briskd-go/src/endpoint"
 )
 
 type Connection struct {
