@@ -184,6 +184,8 @@ func (server *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 me
 	emptySequenceID, _ := sequence.NewID(sequence.IDType(0))
 	header := packet.PacketHeader{Mode: packet.NormalMode, Sequence: emptySequenceID, ConnectionID: connection.ID(0)}
 	stream := headerAndMessageToStream(&header, message2)
+
+	fmt.Printf(">> %s %s\n", addr, message2)
 	server.SendPacketToEndpoint(addr, stream)
 }
 

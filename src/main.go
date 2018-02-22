@@ -23,38 +23,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-package endpoint
+package main
 
 import (
-	"bytes"
 	"fmt"
-	"net"
+	"github.com/piot/fluxd-go/src/server"
 )
 
-type Endpoint struct {
-	addr *net.UDPAddr
-}
-
-// New : Creates an endpoint
-func New(addr *net.UDPAddr) Endpoint {
-	point := Endpoint{addr: addr}
-	return point
-}
-
-func (self *Endpoint) UDPAddr() *net.UDPAddr {
-	return self.addr
-}
-
-func (addr *Endpoint) Equal(addr2 *Endpoint) bool {
-	udp := addr.addr
-	udp2 := addr2.addr
-	return udp.IP.Equal(udp2.IP) && udp.Port == udp2.Port
-}
-
-func (e *Endpoint) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("[endpoint ")
-	buffer.WriteString(fmt.Sprintf("addr:%s port:%d", e.addr.IP, e.addr.Port))
-	buffer.WriteString("]")
-	return buffer.String()
+func main() {
+	fmt.Printf("fluxd 0.1 booting\n")
+	instance := server.New()
+	instance.Forever()
 }
