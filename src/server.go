@@ -35,6 +35,7 @@ import (
 	"github.com/piot/fluxd-go/src/endpoint"
 	"github.com/piot/fluxd-go/src/message"
 	"github.com/piot/fluxd-go/src/packet"
+	"github.com/piot/fluxd-go/src/sequence"
 
 	"net"
 	"time"
@@ -180,8 +181,8 @@ func (self *Connection) handleMessage(msg message.Message) error {
 }
 
 func (server *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 message.Message) {
-	//fmt.Println("Sending %s\n", message2)
-	header := packet.PacketHeader{Mode: packet.NormalMode, Sequence: 0, ConnectionID: connection.ID(0)}
+	emptySequenceID, _ := sequence.NewID(sequence.IDType(0))
+	header := packet.PacketHeader{Mode: packet.NormalMode, Sequence: emptySequenceID, ConnectionID: connection.ID(0)}
 	stream := headerAndMessageToStream(&header, message2)
 	server.SendPacketToEndpoint(addr, stream)
 }

@@ -23,40 +23,53 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-package packet
+package sequence
 
 import (
-	"github.com/piot/brook-go/src/instream"
-	"github.com/piot/brook-go/src/outstream"
-	"github.com/piot/fluxd-go/src/connection"
-	"github.com/piot/fluxd-go/src/sequence"
+	"testing"
 )
 
-type PacketHeader struct {
-	Mode         Mode
-	Sequence     sequence.ID
-	ConnectionID connection.ID
+func TestDistance(t *testing.T) {
+	first, _ := NewID(10)
+	second, _ := NewID(253)
+
+	distance := second.Distance(first)
+	if distance != 13 {
+		t.Errorf("Not correct distance:%d, expected 13", distance)
+	}
 }
 
-func ReadHeader(stream *instream.InStream) (PacketHeader, error) {
-	modeValue, err := stream.ReadUint8()
-	if err != nil {
-		return PacketHeader{}, err
+func TestPreviousID(t *testing.T) {
+	first, _ := NewID(10)
+	second, _ := NewID(9)
+
+	distance := first.Distance(second)
+	if distance != 255 {
+		t.Errorf("Not correct distance:%d, expected 255", distance)
 	}
-	s, err := stream.ReadUint8()
-	if err != nil {
-		return PacketHeader{}, err
-	}
-	connectionID, err := stream.ReadUint16()
-	if err != nil {
-		return PacketHeader{}, err
-	}
-	sequenceID, _ := sequence.NewID(sequence.IDType(s))
-	return PacketHeader{Mode: Mode(modeValue), Sequence: sequenceID, ConnectionID: connection.ID(connectionID)}, nil
 }
 
-func WriteHeader(stream *outstream.OutStream, header *PacketHeader) {
-	stream.WriteUint8(uint8(header.Mode))
-	stream.WriteUint8(uint8(header.Sequence.Raw()))
-	stream.WriteUint16(uint16(header.ConnectionID))
+func TestPreviousIDWrap(t *testing.T) {
+	first, _ := NewID(0)
+	second, _ := NewID(255)
+
+	distance := first.Distance(second)
+	if distance != 255 {
+		t.Errorf("Not correct distance:%d, expected 255", distance)
+	}
+}
+
+func TestNextWrap(t *testing.T) {
+	first, _ := NewID(255)
+	second, _ := NewID(125)
+
+	distance := first.Distance(second)
+	if distance != 126 {
+		t.Errorf("Not correct distance:%d, expected 126", distance)
+	}
+
+	isSuccessor := first.IsSuccessor(second)
+	if !isSuccessor {
+		t.Errorf("Should be successor")
+	}
 }

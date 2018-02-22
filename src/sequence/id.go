@@ -23,40 +23,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-package packet
+package sequence
 
-import (
-	"github.com/piot/brook-go/src/instream"
-	"github.com/piot/brook-go/src/outstream"
-	"github.com/piot/fluxd-go/src/connection"
-	"github.com/piot/fluxd-go/src/sequence"
-)
+type IDType uint8
 
-type PacketHeader struct {
-	Mode         Mode
-	Sequence     sequence.ID
-	ConnectionID connection.ID
+const MaxIDValue = 256
+const HalfMaxIDValue = MaxIDValue / 2
+
+type ID struct {
+	id IDType
 }
 
-func ReadHeader(stream *instream.InStream) (PacketHeader, error) {
-	modeValue, err := stream.ReadUint8()
-	if err != nil {
-		return PacketHeader{}, err
+func abs(n int) int {
+	if n < 0 {
+		return -n
 	}
-	s, err := stream.ReadUint8()
-	if err != nil {
-		return PacketHeader{}, err
-	}
-	connectionID, err := stream.ReadUint16()
-	if err != nil {
-		return PacketHeader{}, err
-	}
-	sequenceID, _ := sequence.NewID(sequence.IDType(s))
-	return PacketHeader{Mode: Mode(modeValue), Sequence: sequenceID, ConnectionID: connection.ID(connectionID)}, nil
+	return n
 }
 
-func WriteHeader(stream *outstream.OutStream, header *PacketHeader) {
-	stream.WriteUint8(uint8(header.Mode))
-	stream.WriteUint8(uint8(header.Sequence.Raw()))
-	stream.WriteUint16(uint16(header.ConnectionID))
+// NewID : Creates an ID
+func NewID(id IDType) (ID, error) {
+	return ID{id: id}, nil
+}
+
+func (i ID) Raw() IDType {
+	return i.id
+}
+
+func (i ID) Distance(next ID) int {
+	nextValue := int(next.id)
+	if next.id < i.id {
+		nextValue += MaxIDValue
+	}
+	diff := nextValue - int(i.id)
+	return diff
+}
+
+func (i ID) IsSuccessor(next ID) bool {
+	diff := i.Distance(next)
+	return diff < HalfMaxIDValue
 }
