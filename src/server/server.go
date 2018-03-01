@@ -115,12 +115,11 @@ func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 	}
 
 	for !inStream.IsEOF() {
-		msg, msgErr := commandcreator.CreateMessage(&inStream)
-		if msgErr != nil {
-			return msgErr
-		}
-
 		if header.ConnectionID == 0 {
+			msg, msgErr := commandcreator.CreateMessage(&inStream)
+			if msgErr != nil {
+				return msgErr
+			}
 			err := server.handleOOBMessage(addr, msg)
 			if err != nil {
 				return err

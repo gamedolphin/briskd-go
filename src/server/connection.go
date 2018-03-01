@@ -28,6 +28,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/piot/briskd-go/src/communication"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/endpoint"
@@ -60,8 +61,11 @@ func (self *Connection) ID() connection.ID {
 }
 
 func (self *Connection) handleStream(stream *instream.InStream) error {
-	fmt.Printf("<< %s %s\n", self, stream)
-	self.userConnection.HandleStream(stream)
+	fmt.Printf("<< %v %v\n", self, stream)
+	userErr := self.userConnection.HandleStream(stream)
+	if userErr != nil {
+		//fmt.Printf("error:%v\n", userErr)
+	}
 	return nil
 }
 

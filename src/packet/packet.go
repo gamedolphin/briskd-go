@@ -28,8 +28,7 @@ package packet
 type Mode int
 
 const (
-	NormalMode           Mode = 1
-	PacketModeConnection Mode = 2
+	NormalMode Mode = 1
 )
 
 type PacketCmd int
