@@ -27,6 +27,7 @@ package server
 
 import (
 	"fmt"
+
 	"github.com/piot/briskd-go/src/commandcreator"
 	"github.com/piot/briskd-go/src/commands"
 	"github.com/piot/briskd-go/src/communication"
@@ -133,12 +134,14 @@ func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 			if handleErr != nil {
 				return handleErr
 			}
+			break
 		}
 	}
 
 	return nil
 }
 
+// New : Creates a new server
 func New(userServer communication.Server) Server {
 	return Server{connections: make(map[connection.ID]*Connection), userServer: userServer}
 }
@@ -161,6 +164,7 @@ func (server *Server) handleIncomingUDP() {
 	}
 }
 
+// SendPacketToEndpoint : Sends one packet to endpoint without rate limit
 func (server *Server) SendPacketToEndpoint(addr *endpoint.Endpoint, stream *outstream.OutStream) {
 	octets := stream.Octets()
 	//hexPayload := hex.Dump(octets)
@@ -223,11 +227,11 @@ func (server *Server) Forever() error {
 	const portString = ":32001"
 	serverAddress, err := net.ResolveUDPAddr("udp", portString)
 	if err != nil {
-		return fmt.Errorf("Error: ", err)
+		return fmt.Errorf("Error:%v ", err)
 	}
 	serverConnection, err := net.ListenUDP("udp", serverAddress)
 	if err != nil {
-		return fmt.Errorf("Error: ", err)
+		return fmt.Errorf("Error: %v", err)
 	}
 
 	fmt.Printf("Listening to %s\n", portString)
