@@ -28,10 +28,12 @@ package communication
 import (
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
 type Connection interface {
 	HandleStream(stream *instream.InStream) error
+	SendStream(stream *outstream.OutStream) error
 }
 
 type Server interface {

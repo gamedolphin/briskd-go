@@ -27,7 +27,7 @@ package sequence
 
 type IDType uint8
 
-const MaxIDValue = 256
+const MaxIDValue = 127
 const HalfMaxIDValue = MaxIDValue / 2
 
 type ID struct {
@@ -48,6 +48,10 @@ func NewID(id IDType) (ID, error) {
 
 func (i ID) Raw() IDType {
 	return i.id
+}
+
+func (i ID) Next() ID {
+	return ID{id: (i.id + 1) % MaxIDValue}
 }
 
 func (i ID) Distance(next ID) int {

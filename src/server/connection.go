@@ -32,19 +32,23 @@ import (
 	"github.com/piot/briskd-go/src/communication"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/endpoint"
+	"github.com/piot/briskd-go/src/sequence"
 	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
 type Connection struct {
-	endpoint       *endpoint.Endpoint
-	nonce          uint32
-	id             connection.ID
-	userConnection communication.Connection
-	server         *Server
+	endpoint          *endpoint.Endpoint
+	nonce             uint32
+	id                connection.ID
+	userConnection    communication.Connection
+	server            *Server
+	NextOutSequenceID sequence.ID
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
-	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce}
+	nextOutSequenceID, _ := sequence.NewID(sequence.MaxIDValue)
+	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID}
 	return c
 }
 
@@ -60,11 +64,15 @@ func (self *Connection) ID() connection.ID {
 	return self.id
 }
 
+func (self *Connection) Send(stream *outstream.OutStream) error {
+	return self.userConnection.SendStream(stream)
+}
+
 func (self *Connection) handleStream(stream *instream.InStream) error {
 	fmt.Printf("<< %v %v\n", self, stream)
 	userErr := self.userConnection.HandleStream(stream)
 	if userErr != nil {
-		//fmt.Printf("error:%v\n", userErr)
+		fmt.Printf("error:%v\n", userErr)
 	}
 	return nil
 }

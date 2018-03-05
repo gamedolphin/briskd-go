@@ -26,6 +26,7 @@ SOFTWARE.
 package server
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/piot/briskd-go/src/commandcreator"
@@ -50,6 +51,7 @@ type Server struct {
 }
 
 func (server *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
+
 	addr := conn.Addr()
 	server.SendPacketToEndpoint(addr, stream)
 }
@@ -167,8 +169,8 @@ func (server *Server) handleIncomingUDP() {
 // SendPacketToEndpoint : Sends one packet to endpoint without rate limit
 func (server *Server) SendPacketToEndpoint(addr *endpoint.Endpoint, stream *outstream.OutStream) {
 	octets := stream.Octets()
-	//hexPayload := hex.Dump(octets)
-	//fmt.Println("Sending ", hexPayload, " to ", addr)
+	hexPayload := hex.Dump(octets)
+	fmt.Println("Sending ", hexPayload, " to ", addr)
 	server.connection.WriteToUDP(octets, addr.UDPAddr())
 }
 
@@ -209,6 +211,16 @@ func (server *Server) tick() error {
 }
 
 func (server *Server) sendStream(connection *Connection) error {
+	stream := outstream.New()
+	connection.NextOutSequenceID = connection.NextOutSequenceID.Next()
+	header := &packet.PacketHeader{Mode: packet.NormalMode, Sequence: connection.NextOutSequenceID, ConnectionID: connection.ID()}
+	packet.WriteHeader(stream, header)
+
+	userErr := connection.userConnection.SendStream(stream)
+	if userErr != nil {
+		return userErr
+	}
+	server.SendPacketToConnection(connection, stream)
 	return nil
 }
 
