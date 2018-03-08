@@ -26,7 +26,6 @@ SOFTWARE.
 package server
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/piot/briskd-go/src/commandcreator"
@@ -37,6 +36,7 @@ import (
 	"github.com/piot/briskd-go/src/message"
 	"github.com/piot/briskd-go/src/packet"
 	"github.com/piot/briskd-go/src/sequence"
+	brisktime "github.com/piot/briskd-go/src/time"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
 
@@ -51,7 +51,6 @@ type Server struct {
 }
 
 func (server *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
-
 	addr := conn.Addr()
 	server.SendPacketToEndpoint(addr, stream)
 }
@@ -75,6 +74,15 @@ func (server *Server) fetchConnection(addr *endpoint.Endpoint, connectionID conn
 	return connection, nil
 }
 
+func (server *Server) onTimeSync(addr *endpoint.Endpoint, timesyncRequest *commands.TimeSyncRequest, connection *Connection) error {
+	fmt.Printf("on_timesync: %v\n", timesyncRequest)
+	localTime := uint64(brisktime.MonotonicMilliseconds())
+	response := commands.NewTimeSyncResponse(timesyncRequest.RemoteTime, localTime)
+	server.SendMessageToConnection(connection, response, packet.OobMode)
+
+	return nil
+}
+
 func (server *Server) challenge(addr *endpoint.Endpoint, challengeMessage *commands.ChallengeMessage) error {
 	fmt.Printf("on_challenge:%s\n", challengeMessage)
 	existingConnection := server.findExistingConnectionFromEndpointAndChallenge(addr, challengeMessage.ClientDeterminedNonce)
@@ -93,12 +101,17 @@ func (server *Server) challenge(addr *endpoint.Endpoint, challengeMessage *comma
 	return nil
 }
 
-func (server *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Message) error {
+func (server *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Message, connection *Connection) error {
 	fmt.Printf("OOB %s\n ", msg)
 
 	switch msg.Command() {
 	case packet.OobPacketTypeChallenge:
 		err := server.challenge(addr, msg.(*commands.ChallengeMessage))
+		if err != nil {
+			return err
+		}
+	case packet.OobPacketTypeTimeSyncRequest:
+		err := server.onTimeSync(addr, msg.(*commands.TimeSyncRequest), connection)
 		if err != nil {
 			return err
 		}
@@ -109,32 +122,45 @@ func (server *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Mess
 
 }
 
+func (server *Server) handleOOBStream(addr *endpoint.Endpoint, inStream *instream.InStream, connection *Connection) error {
+	msg, msgErr := commandcreator.CreateMessage(inStream)
+	if msgErr != nil {
+		return msgErr
+	}
+	err := server.handleOOBMessage(addr, msg, connection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 	inStream := instream.New(buf)
 	header, _ := packet.ReadHeader(&inStream)
 
-	if header.Mode != packet.NormalMode {
+	if header.Mode != packet.NormalMode && header.Mode != packet.OobMode {
 		return fmt.Errorf("unknown mode")
 	}
 
 	for !inStream.IsEOF() {
 		if header.ConnectionID == 0 {
-			msg, msgErr := commandcreator.CreateMessage(&inStream)
-			if msgErr != nil {
-				return msgErr
-			}
-			err := server.handleOOBMessage(addr, msg)
-			if err != nil {
-				return err
-			}
+			server.handleOOBStream(addr, &inStream, nil)
 		} else {
 			connection, findConnectionErr := server.fetchConnection(addr, header.ConnectionID)
 			if findConnectionErr != nil {
 				return findConnectionErr
 			}
-			handleErr := connection.handleStream(&inStream)
-			if handleErr != nil {
-				return handleErr
+			if header.Mode == packet.OobMode {
+				handleErr := server.handleOOBStream(addr, &inStream, connection)
+				if handleErr != nil {
+					return handleErr
+				}
+			} else {
+				handleErr := connection.handleStream(&inStream)
+				if handleErr != nil {
+					return handleErr
+				}
 			}
 			break
 		}
@@ -169,8 +195,8 @@ func (server *Server) handleIncomingUDP() {
 // SendPacketToEndpoint : Sends one packet to endpoint without rate limit
 func (server *Server) SendPacketToEndpoint(addr *endpoint.Endpoint, stream *outstream.OutStream) {
 	octets := stream.Octets()
-	hexPayload := hex.Dump(octets)
-	fmt.Println("Sending ", hexPayload, " to ", addr)
+	// hexPayload := hex.Dump(octets)
+	//fmt.Println("Sending ", hexPayload, " to ", addr)
 	server.connection.WriteToUDP(octets, addr.UDPAddr())
 }
 
@@ -193,6 +219,15 @@ func (server *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 me
 	server.SendPacketToEndpoint(addr, stream)
 }
 
+func (server *Server) SendMessageToConnection(connection *Connection, message2 message.Message, mode packet.Mode) error {
+	stream := writeConnectionHeader(connection, mode)
+	stream.WriteUint8(uint8(message2.Command()))
+	message2.Serialize(stream)
+	fmt.Printf(">>> %v %v\n", connection, message2)
+	server.SendPacketToConnection(connection, stream)
+	return nil
+}
+
 func (server *Server) tick() error {
 	var resultErr error
 	for _, connection := range server.connections {
@@ -210,12 +245,16 @@ func (server *Server) tick() error {
 	return resultErr
 }
 
-func (server *Server) sendStream(connection *Connection) error {
+func writeConnectionHeader(connection *Connection, mode packet.Mode) *outstream.OutStream {
 	stream := outstream.New()
 	connection.NextOutSequenceID = connection.NextOutSequenceID.Next()
-	header := &packet.PacketHeader{Mode: packet.NormalMode, Sequence: connection.NextOutSequenceID, ConnectionID: connection.ID()}
+	header := &packet.PacketHeader{Mode: mode, Sequence: connection.NextOutSequenceID, ConnectionID: connection.ID()}
 	packet.WriteHeader(stream, header)
+	return stream
+}
 
+func (server *Server) sendStream(connection *Connection) error {
+	stream := writeConnectionHeader(connection, packet.NormalMode)
 	userErr := connection.userConnection.SendStream(stream)
 	if userErr != nil {
 		return userErr

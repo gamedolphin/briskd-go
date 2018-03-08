@@ -23,45 +23,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-package commandcreator
+package time
 
 import (
-	"fmt"
-
-	"github.com/piot/briskd-go/src/commands"
-	"github.com/piot/briskd-go/src/message"
-	"github.com/piot/briskd-go/src/packet"
-	"github.com/piot/brook-go/src/instream"
+	gotime "time"
 )
 
-func createMessageFromStream(oobType packet.PacketCmd) message.Message {
-	switch oobType {
-	case packet.OobPacketTypeChallenge:
-		return &commands.ChallengeMessage{}
-	case packet.OobPacketTypeChallengeResponse:
-		return &commands.ChallengeResponseMessage{}
-	case packet.OobPacketTypeTimeSyncRequest:
-		return &commands.TimeSyncRequest{}
-	}
-
-	return nil
+// MonotonicMilliseconds returns the number of milliseconds elapsed
+func MonotonicMilliseconds() int64 {
+	now := gotime.Now()
+	return now.UnixNano() / int64(gotime.Millisecond)
 }
 
-func CreateMessage(stream *instream.InStream) (message.Message, error) {
-	packetValue, packetValueErr := stream.ReadUint8()
-	if packetValueErr != nil {
-		return nil, packetValueErr
-	}
-	oobType := packet.PacketCmd(packetValue)
-
-	msg := createMessageFromStream(oobType)
-	if msg == nil {
-		return nil, fmt.Errorf("illegal message type:%02X", packetValue)
-	}
-	err := msg.Deserialize(stream)
-	if err != nil {
-		return nil, err
-	}
-
-	return msg, nil
+// MonotonicSimulationFrame returns the monotonic simulation frame (60Hz)
+func MonotonicSimulationFrame() int64 {
+	return (MonotonicMilliseconds() * 60) / 1000
 }

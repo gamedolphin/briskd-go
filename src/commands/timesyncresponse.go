@@ -23,45 +23,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-package commandcreator
+package commands
 
 import (
 	"fmt"
 
-	"github.com/piot/briskd-go/src/commands"
-	"github.com/piot/briskd-go/src/message"
 	"github.com/piot/briskd-go/src/packet"
 	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
-func createMessageFromStream(oobType packet.PacketCmd) message.Message {
-	switch oobType {
-	case packet.OobPacketTypeChallenge:
-		return &commands.ChallengeMessage{}
-	case packet.OobPacketTypeChallengeResponse:
-		return &commands.ChallengeResponseMessage{}
-	case packet.OobPacketTypeTimeSyncRequest:
-		return &commands.TimeSyncRequest{}
-	}
+type TimeSyncResponse struct {
+	EchoedTime uint64
+	LocalTime  uint64
+}
+
+func NewTimeSyncResponse(echoedTime uint64, localTime uint64) *TimeSyncResponse {
+	return &TimeSyncResponse{EchoedTime: echoedTime, LocalTime: localTime}
+}
+
+func (c *TimeSyncResponse) Serialize(stream *outstream.OutStream) error {
+	stream.WriteUint64(c.EchoedTime)
+	stream.WriteUint64(c.LocalTime)
 
 	return nil
 }
 
-func CreateMessage(stream *instream.InStream) (message.Message, error) {
-	packetValue, packetValueErr := stream.ReadUint8()
-	if packetValueErr != nil {
-		return nil, packetValueErr
-	}
-	oobType := packet.PacketCmd(packetValue)
+func (c *TimeSyncResponse) Deserialize(stream *instream.InStream) error {
+	stream.ReadUint64()
+	stream.ReadUint64()
+	return nil
+}
 
-	msg := createMessageFromStream(oobType)
-	if msg == nil {
-		return nil, fmt.Errorf("illegal message type:%02X", packetValue)
-	}
-	err := msg.Deserialize(stream)
-	if err != nil {
-		return nil, err
-	}
+func (c *TimeSyncResponse) Command() packet.PacketCmd {
+	return packet.OobPacketTypeTimeSyncResponse
+}
 
-	return msg, nil
+func (c *TimeSyncResponse) String() string {
+	return fmt.Sprintf("[TimeSyncResponse echo %v local %v", c.EchoedTime, c.LocalTime)
 }

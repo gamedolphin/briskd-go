@@ -23,45 +23,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-package commandcreator
+package commands
 
 import (
 	"fmt"
 
-	"github.com/piot/briskd-go/src/commands"
-	"github.com/piot/briskd-go/src/message"
 	"github.com/piot/briskd-go/src/packet"
 	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
-func createMessageFromStream(oobType packet.PacketCmd) message.Message {
-	switch oobType {
-	case packet.OobPacketTypeChallenge:
-		return &commands.ChallengeMessage{}
-	case packet.OobPacketTypeChallengeResponse:
-		return &commands.ChallengeResponseMessage{}
-	case packet.OobPacketTypeTimeSyncRequest:
-		return &commands.TimeSyncRequest{}
-	}
+type TimeSyncRequest struct {
+	RemoteTime uint64
+}
+
+func NewTimeSyncRequest(remoteTime uint64) *TimeSyncRequest {
+	return &TimeSyncRequest{RemoteTime: remoteTime}
+}
+
+func (c *TimeSyncRequest) Serialize(stream *outstream.OutStream) error {
+	stream.WriteUint64(c.RemoteTime)
 
 	return nil
 }
 
-func CreateMessage(stream *instream.InStream) (message.Message, error) {
-	packetValue, packetValueErr := stream.ReadUint8()
-	if packetValueErr != nil {
-		return nil, packetValueErr
-	}
-	oobType := packet.PacketCmd(packetValue)
+func (c *TimeSyncRequest) Deserialize(stream *instream.InStream) error {
+	c.RemoteTime, _ = stream.ReadUint64()
+	return nil
+}
 
-	msg := createMessageFromStream(oobType)
-	if msg == nil {
-		return nil, fmt.Errorf("illegal message type:%02X", packetValue)
-	}
-	err := msg.Deserialize(stream)
-	if err != nil {
-		return nil, err
-	}
+func (c *TimeSyncRequest) Command() packet.PacketCmd {
+	return packet.OobPacketTypeTimeSyncRequest
+}
 
-	return msg, nil
+func (c *TimeSyncRequest) String() string {
+	return fmt.Sprintf("[TimeSyncRequest remote %v", c.RemoteTime)
 }

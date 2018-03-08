@@ -29,6 +29,7 @@ type Mode int
 
 const (
 	NormalMode Mode = 1
+	OobMode    Mode = 2
 )
 
 type PacketCmd int
@@ -36,4 +37,6 @@ type PacketCmd int
 const (
 	OobPacketTypeChallenge         PacketCmd = 1
 	OobPacketTypeChallengeResponse PacketCmd = 2
+	OobPacketTypeTimeSyncRequest   PacketCmd = 3
+	OobPacketTypeTimeSyncResponse  PacketCmd = 4
 )
