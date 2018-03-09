@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package server
 
 import (
@@ -215,7 +216,7 @@ func (server *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 me
 	header := packet.PacketHeader{Mode: packet.NormalMode, Sequence: emptySequenceID, ConnectionID: connection.ID(0)}
 	stream := headerAndMessageToStream(&header, message2)
 
-	fmt.Printf(">> %s %s\n", addr, message2)
+	// fmt.Printf(">> %s %s\n", addr, message2)
 	server.SendPacketToEndpoint(addr, stream)
 }
 
@@ -223,12 +224,13 @@ func (server *Server) SendMessageToConnection(connection *Connection, message2 m
 	stream := writeConnectionHeader(connection, mode)
 	stream.WriteUint8(uint8(message2.Command()))
 	message2.Serialize(stream)
-	fmt.Printf(">>> %v %v\n", connection, message2)
+	// fmt.Printf(">>> %v %v\n", connection, message2)
 	server.SendPacketToConnection(connection, stream)
 	return nil
 }
 
 func (server *Server) tick() error {
+	server.userServer.Tick()
 	var resultErr error
 	for _, connection := range server.connections {
 		err := server.sendStream(connection)
@@ -265,7 +267,7 @@ func (server *Server) sendStream(connection *Connection) error {
 
 func (server *Server) start(ticker *time.Ticker) {
 	go func() {
-		for _ = range ticker.C {
+		for range ticker.C {
 			err := server.tick()
 			if err != nil {
 				fmt.Printf("Start err %s \n", err)

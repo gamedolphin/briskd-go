@@ -23,14 +23,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package commands
 
 import (
 	"fmt"
-	"github.com/piot/brook-go/src/instream"
-	"github.com/piot/brook-go/src/outstream"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/packet"
+	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
 type ChallengeResponseMessage struct {

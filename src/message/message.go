@@ -23,12 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package message
 
 import (
+	"github.com/piot/briskd-go/src/packet"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
-	"github.com/piot/briskd-go/src/packet"
 )
 
 type Message interface {

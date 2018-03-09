@@ -23,11 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package commandcreator
 
 import (
-	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/briskd-go/src/commands"
+	"github.com/piot/brook-go/src/instream"
 	"testing"
 )
 

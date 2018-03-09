@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package communication
 
 import (
@@ -38,4 +39,5 @@ type Connection interface {
 
 type Server interface {
 	CreateConnection(id connection.ID) Connection
+	Tick()
 }

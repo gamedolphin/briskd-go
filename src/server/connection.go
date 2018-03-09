@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package server
 
 import (
@@ -69,7 +70,7 @@ func (self *Connection) Send(stream *outstream.OutStream) error {
 }
 
 func (self *Connection) handleStream(stream *instream.InStream) error {
-	fmt.Printf("<< %v %v\n", self, stream)
+	//fmt.Printf("<< %v %v\n", self, stream)
 	userErr := self.userConnection.HandleStream(stream)
 	if userErr != nil {
 		fmt.Printf("error:%v\n", userErr)

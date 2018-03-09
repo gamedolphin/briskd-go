@@ -23,13 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 package packet
 
 import (
-	"github.com/piot/brook-go/src/instream"
-	"github.com/piot/brook-go/src/outstream"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/sequence"
+	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
 type PacketHeader struct {
