@@ -233,10 +233,12 @@ func (server *Server) tick() error {
 	server.userServer.Tick()
 	var resultErr error
 	for _, connection := range server.connections {
-		err := server.sendStream(connection)
-		if err != nil {
-			if resultErr != nil {
-				resultErr = err
+		for i := 0; i < 3; i++ {
+			err := server.sendStream(connection)
+			if err != nil {
+				if resultErr != nil {
+					resultErr = err
+				}
 			}
 		}
 	}
@@ -291,7 +293,7 @@ func (server *Server) Forever() error {
 
 	go server.handleIncomingUDP()
 	//defer serverConnection.Close()
-	ticker := time.NewTicker(time.Millisecond * 100)
+	ticker := time.NewTicker(time.Millisecond * 10)
 
 	server.connection = serverConnection
 	server.start(ticker)
