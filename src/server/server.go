@@ -50,10 +50,13 @@ type Server struct {
 	connections                    map[connection.ID]*Connection
 	userServer                     communication.Server
 	lastAllocatedConnectionIDValue uint16
+	lastTimeStatsCalculatedAt      int64
 }
 
 func (s *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
 	addr := conn.Addr()
+	octetCount := uint(len(stream.Octets()))
+	conn.SentPacket(octetCount)
 	s.SendPacketToEndpoint(addr, stream)
 }
 
@@ -160,6 +163,7 @@ func (s *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 					return handleErr
 				}
 			} else {
+				connection.ReceivedPacket(uint(len(buf)))
 				handleErr := connection.handleStream(&inStream)
 				if handleErr != nil {
 					return handleErr
@@ -235,7 +239,7 @@ func (s *Server) tick() error {
 	s.userServer.Tick()
 	var resultErr error
 	for _, connection := range s.connections {
-		for i := 0; i < 3; i++ {
+		for i := 0; i < 1; i++ {
 			err := s.sendStream(connection)
 			if err != nil {
 				if resultErr != nil {
@@ -253,6 +257,14 @@ func (s *Server) tick() error {
 			connection.Lost()
 			deletedConnections = append(deletedConnections, connection)
 		}
+	}
+
+	timeSinceStats := nowMilliseconds - s.lastTimeStatsCalculatedAt
+	if timeSinceStats > 5000 {
+		for _, connection := range s.connections {
+			connection.CalculateStats(uint(timeSinceStats))
+		}
+		s.lastTimeStatsCalculatedAt = nowMilliseconds
 	}
 
 	for _, deletedConnection := range deletedConnections {
@@ -309,7 +321,7 @@ func (s *Server) Forever() error {
 
 	go s.handleIncomingUDP()
 	//defer serverConnection.Close()
-	ticker := time.NewTicker(time.Millisecond * 10)
+	ticker := time.NewTicker(time.Millisecond * 33)
 
 	s.connection = serverConnection
 	s.start(ticker)

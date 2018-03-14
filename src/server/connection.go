@@ -47,6 +47,8 @@ type Connection struct {
 	server               *Server
 	NextOutSequenceID    sequence.ID
 	LastReceivedPacketAt int64
+	runningStats         connection.RunningStats
+	stats                connection.Stats
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
@@ -57,6 +59,19 @@ func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint
 
 func (c *Connection) SetUserConnection(userConnection communication.Connection) {
 	c.userConnection = userConnection
+}
+
+func (c *Connection) SentPacket(octetCount uint) {
+	c.runningStats.Sent.AddPackets(1, octetCount)
+}
+
+func (c *Connection) ReceivedPacket(octetCount uint) {
+	c.runningStats.Received.AddPackets(1, octetCount)
+}
+
+func (c *Connection) CalculateStats(millisecondsDuration uint) {
+	c.stats.SetFromRunningStats(&c.runningStats, millisecondsDuration)
+	fmt.Printf("%v %v\n", c.id, &c.stats)
 }
 
 func (c *Connection) Addr() *endpoint.Endpoint {
