@@ -33,7 +33,9 @@ import (
 
 type RunningStatsDirection struct {
 	packets uint
-	octets  uint
+
+	octets         uint
+	octetsOverhead uint
 }
 
 type RunningStats struct {
@@ -42,8 +44,9 @@ type RunningStats struct {
 }
 
 type StatsDirection struct {
-	packetsPerSecond float32
-	octetsPerSecond  float32
+	packetsPerSecond               float32
+	octetsWithoutOverheadPerSecond float32
+	octetsPerSecond                float32
 }
 
 type Stats struct {
@@ -54,15 +57,19 @@ type Stats struct {
 func (s *RunningStatsDirection) AddPackets(count uint, octetCount uint) {
 	s.packets += count
 	s.octets += octetCount
+	const ipv4UDPOverhead = 28
+	s.octetsOverhead += count * ipv4UDPOverhead
 }
 
 func (s *RunningStatsDirection) Reset() {
 	s.octets = 0
 	s.packets = 0
+	s.octetsOverhead = 0
 }
 
 func (s *StatsDirection) SetFromRunningStats(rs *RunningStatsDirection, millisecondsDuration uint) {
-	s.octetsPerSecond = float32(rs.octets*1000) / float32(millisecondsDuration)
+	s.octetsPerSecond = float32((rs.octets+rs.octetsOverhead)*1000) / float32(millisecondsDuration)
+	s.octetsWithoutOverheadPerSecond = float32((rs.octets)*1000) / float32(millisecondsDuration)
 	s.packetsPerSecond = float32(rs.packets*1000) / float32(millisecondsDuration)
 	rs.Reset()
 }
@@ -72,7 +79,7 @@ func (s *Stats) SetFromRunningStats(rs *RunningStats, millisecondsDuration uint)
 	s.sent.SetFromRunningStats(&rs.Sent, millisecondsDuration)
 }
 
-type Rate float64
+type Rate int
 
 const (
 	B  Rate = 1
@@ -81,15 +88,31 @@ const (
 )
 
 func (b Rate) Megabytes() float64 {
-	return float64(b / MB)
+	return float64(b) / float64(MB)
+}
+
+func (b Rate) Kilobytes() float64 {
+	return float64(b) / float64(KB)
+}
+
+func (b Rate) RatePerSecond() string {
+	switch {
+	case b > (KB * 100):
+		return fmt.Sprintf("%.1f mbps", b.Megabytes())
+	case b > KB:
+		return fmt.Sprintf("%.0f kbps", b.Kilobytes())
+	default:
+		return fmt.Sprintf("%d bps", b)
+	}
 }
 
 func (s *StatsDirection) String() string {
-	megaBitsPerSecond := Rate(s.octetsPerSecond * 8).Megabytes()
+	megaBitsPerSecond := Rate(s.octetsPerSecond * 8).RatePerSecond()
 
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
-	buffer.WriteString(fmt.Sprintf("%0.1f mbps %0.1f packets/s", megaBitsPerSecond, s.packetsPerSecond))
+	efficiency := s.octetsWithoutOverheadPerSecond / s.octetsPerSecond
+	buffer.WriteString(fmt.Sprintf("%v %0.1f packets/s (efficiency:%.0f %%)", megaBitsPerSecond, s.packetsPerSecond, (efficiency * 100.0)))
 	buffer.WriteString("]")
 	return buffer.String()
 }
