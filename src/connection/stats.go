@@ -111,7 +111,11 @@ func (s *StatsDirection) String() string {
 
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
-	efficiency := s.octetsWithoutOverheadPerSecond / s.octetsPerSecond
+	efficiency := float32(0.0)
+	const EPSILON = 0.00001
+	if s.octetsPerSecond > EPSILON {
+		efficiency = s.octetsWithoutOverheadPerSecond / s.octetsPerSecond
+	}
 	buffer.WriteString(fmt.Sprintf("%v %0.1f packets/s (efficiency:%.0f %%)", megaBitsPerSecond, s.packetsPerSecond, (efficiency * 100.0)))
 	buffer.WriteString("]")
 	return buffer.String()
