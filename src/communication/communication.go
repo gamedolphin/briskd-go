@@ -35,6 +35,7 @@ import (
 type Connection interface {
 	HandleStream(stream *instream.InStream) error
 	SendStream(stream *outstream.OutStream) error
+	Lost() error
 }
 
 type Server interface {

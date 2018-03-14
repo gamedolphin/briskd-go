@@ -34,22 +34,24 @@ import (
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/endpoint"
 	"github.com/piot/briskd-go/src/sequence"
+	brisktime "github.com/piot/briskd-go/src/time"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
 )
 
 type Connection struct {
-	endpoint          *endpoint.Endpoint
-	nonce             uint32
-	id                connection.ID
-	userConnection    communication.Connection
-	server            *Server
-	NextOutSequenceID sequence.ID
+	endpoint             *endpoint.Endpoint
+	nonce                uint32
+	id                   connection.ID
+	userConnection       communication.Connection
+	server               *Server
+	NextOutSequenceID    sequence.ID
+	LastReceivedPacketAt int64
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
 	nextOutSequenceID, _ := sequence.NewID(sequence.MaxIDValue)
-	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID}
+	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID, LastReceivedPacketAt: brisktime.MonotonicMilliseconds()}
 	return c
 }
 
@@ -57,25 +59,30 @@ func (c *Connection) SetUserConnection(userConnection communication.Connection) 
 	c.userConnection = userConnection
 }
 
-func (self *Connection) Addr() *endpoint.Endpoint {
-	return self.endpoint
+func (c *Connection) Addr() *endpoint.Endpoint {
+	return c.endpoint
 }
 
-func (self *Connection) ID() connection.ID {
-	return self.id
+func (c *Connection) ID() connection.ID {
+	return c.id
 }
 
-func (self *Connection) Send(stream *outstream.OutStream) error {
-	return self.userConnection.SendStream(stream)
+func (c *Connection) Send(stream *outstream.OutStream) error {
+	return c.userConnection.SendStream(stream)
 }
 
-func (self *Connection) handleStream(stream *instream.InStream) error {
-	//fmt.Printf("<< %v %v\n", self, stream)
-	userErr := self.userConnection.HandleStream(stream)
+func (c *Connection) handleStream(stream *instream.InStream) error {
+	//fmt.Printf("<< %v %v\n", c, stream)
+	userErr := c.userConnection.HandleStream(stream)
 	if userErr != nil {
 		fmt.Printf("error:%v\n", userErr)
 	}
 	return nil
+}
+
+func (c *Connection) Lost() {
+	fmt.Printf("Connection Lost %v\n", c)
+	c.userConnection.Lost()
 }
 
 func (c *Connection) String() string {

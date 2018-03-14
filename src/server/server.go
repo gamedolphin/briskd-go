@@ -46,26 +46,27 @@ import (
 )
 
 type Server struct {
-	connection  *net.UDPConn
-	connections map[connection.ID]*Connection
-	userServer  communication.Server
+	connection                     *net.UDPConn
+	connections                    map[connection.ID]*Connection
+	userServer                     communication.Server
+	lastAllocatedConnectionIDValue uint16
 }
 
-func (server *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
+func (s *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
 	addr := conn.Addr()
-	server.SendPacketToEndpoint(addr, stream)
+	s.SendPacketToEndpoint(addr, stream)
 }
 
-func (server *Server) findConnection(addr *endpoint.Endpoint, connectionID connection.ID) (*Connection, error) {
-	connection, foundIt := server.connections[connectionID]
+func (s *Server) findConnection(addr *endpoint.Endpoint, connectionID connection.ID) (*Connection, error) {
+	connection, foundIt := s.connections[connectionID]
 	if !foundIt {
 		return nil, nil
 	}
 	return connection, nil
 }
 
-func (server *Server) fetchConnection(addr *endpoint.Endpoint, connectionID connection.ID) (*Connection, error) {
-	connection, err := server.findConnection(addr, connectionID)
+func (s *Server) fetchConnection(addr *endpoint.Endpoint, connectionID connection.ID) (*Connection, error) {
+	connection, err := s.findConnection(addr, connectionID)
 	if err != nil {
 		return connection, err
 	}
@@ -75,44 +76,44 @@ func (server *Server) fetchConnection(addr *endpoint.Endpoint, connectionID conn
 	return connection, nil
 }
 
-func (server *Server) onTimeSync(addr *endpoint.Endpoint, timesyncRequest *commands.TimeSyncRequest, connection *Connection) error {
+func (s *Server) onTimeSync(addr *endpoint.Endpoint, timesyncRequest *commands.TimeSyncRequest, connection *Connection) error {
 	fmt.Printf("on_timesync: %v\n", timesyncRequest)
 	localTime := uint64(brisktime.MonotonicMilliseconds())
 	response := commands.NewTimeSyncResponse(timesyncRequest.RemoteTime, localTime)
-	server.SendMessageToConnection(connection, response, packet.OobMode)
+	s.SendMessageToConnection(connection, response, packet.OobMode)
 
 	return nil
 }
 
-func (server *Server) challenge(addr *endpoint.Endpoint, challengeMessage *commands.ChallengeMessage) error {
+func (s *Server) challenge(addr *endpoint.Endpoint, challengeMessage *commands.ChallengeMessage) error {
 	fmt.Printf("on_challenge:%s\n", challengeMessage)
-	existingConnection := server.findExistingConnectionFromEndpointAndChallenge(addr, challengeMessage.ClientDeterminedNonce)
+	existingConnection := s.findExistingConnectionFromEndpointAndChallenge(addr, challengeMessage.ClientDeterminedNonce)
 	if existingConnection == nil {
-		newConnection, err := server.createConnection(addr, challengeMessage.ClientDeterminedNonce)
+		newConnection, err := s.createConnection(addr, challengeMessage.ClientDeterminedNonce)
 		if err != nil {
 			return err
 		}
-		userConnection := server.userServer.CreateConnection(newConnection.ID())
+		userConnection := s.userServer.CreateConnection(newConnection.ID())
 		newConnection.SetUserConnection(userConnection)
 		response := commands.NewChallengeResponseMessage(challengeMessage.ClientDeterminedNonce, newConnection.ID())
-		server.SendMessageToEndpoint(addr, response)
+		s.SendMessageToEndpoint(addr, response)
 	} else {
 		return fmt.Errorf("We already have a connection for nonce: %d", challengeMessage.ClientDeterminedNonce)
 	}
 	return nil
 }
 
-func (server *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Message, connection *Connection) error {
+func (s *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Message, connection *Connection) error {
 	fmt.Printf("OOB %s\n ", msg)
 
 	switch msg.Command() {
 	case packet.OobPacketTypeChallenge:
-		err := server.challenge(addr, msg.(*commands.ChallengeMessage))
+		err := s.challenge(addr, msg.(*commands.ChallengeMessage))
 		if err != nil {
 			return err
 		}
 	case packet.OobPacketTypeTimeSyncRequest:
-		err := server.onTimeSync(addr, msg.(*commands.TimeSyncRequest), connection)
+		err := s.onTimeSync(addr, msg.(*commands.TimeSyncRequest), connection)
 		if err != nil {
 			return err
 		}
@@ -123,12 +124,12 @@ func (server *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Mess
 
 }
 
-func (server *Server) handleOOBStream(addr *endpoint.Endpoint, inStream *instream.InStream, connection *Connection) error {
+func (s *Server) handleOOBStream(addr *endpoint.Endpoint, inStream *instream.InStream, connection *Connection) error {
 	msg, msgErr := commandcreator.CreateMessage(inStream)
 	if msgErr != nil {
 		return msgErr
 	}
-	err := server.handleOOBMessage(addr, msg, connection)
+	err := s.handleOOBMessage(addr, msg, connection)
 	if err != nil {
 		return err
 	}
@@ -136,7 +137,7 @@ func (server *Server) handleOOBStream(addr *endpoint.Endpoint, inStream *instrea
 	return nil
 }
 
-func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
+func (s *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 	inStream := instream.New(buf)
 	header, _ := packet.ReadHeader(&inStream)
 
@@ -146,14 +147,15 @@ func (server *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 
 	for !inStream.IsEOF() {
 		if header.ConnectionID == 0 {
-			server.handleOOBStream(addr, &inStream, nil)
+			s.handleOOBStream(addr, &inStream, nil)
 		} else {
-			connection, findConnectionErr := server.fetchConnection(addr, header.ConnectionID)
+			connection, findConnectionErr := s.fetchConnection(addr, header.ConnectionID)
 			if findConnectionErr != nil {
 				return findConnectionErr
 			}
+			connection.LastReceivedPacketAt = brisktime.MonotonicMilliseconds()
 			if header.Mode == packet.OobMode {
-				handleErr := server.handleOOBStream(addr, &inStream, connection)
+				handleErr := s.handleOOBStream(addr, &inStream, connection)
 				if handleErr != nil {
 					return handleErr
 				}
@@ -175,10 +177,10 @@ func New(userServer communication.Server) Server {
 	return Server{connections: make(map[connection.ID]*Connection), userServer: userServer}
 }
 
-func (server *Server) handleIncomingUDP() {
+func (s *Server) handleIncomingUDP() {
 	for {
 		buf := make([]byte, 1800)
-		n, addr, err := server.connection.ReadFromUDP(buf)
+		n, addr, err := s.connection.ReadFromUDP(buf)
 		packet := buf[0:n]
 		addrEndpoint := endpoint.New(addr)
 		//hexPayload := hex.Dump(packet)
@@ -186,7 +188,7 @@ func (server *Server) handleIncomingUDP() {
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
-		packetErr := server.handlePacket(packet, &addrEndpoint)
+		packetErr := s.handlePacket(packet, &addrEndpoint)
 		if packetErr != nil {
 			fmt.Printf("Problem with packet:%s\n", packetErr)
 		}
@@ -194,11 +196,11 @@ func (server *Server) handleIncomingUDP() {
 }
 
 // SendPacketToEndpoint : Sends one packet to endpoint without rate limit
-func (server *Server) SendPacketToEndpoint(addr *endpoint.Endpoint, stream *outstream.OutStream) {
+func (s *Server) SendPacketToEndpoint(addr *endpoint.Endpoint, stream *outstream.OutStream) {
 	octets := stream.Octets()
 	// hexPayload := hex.Dump(octets)
 	//fmt.Println("Sending ", hexPayload, " to ", addr)
-	server.connection.WriteToUDP(octets, addr.UDPAddr())
+	s.connection.WriteToUDP(octets, addr.UDPAddr())
 }
 
 func headerAndMessageToStream(header *packet.PacketHeader, message2 message.Message) *outstream.OutStream {
@@ -211,36 +213,50 @@ func headerAndMessageToStream(header *packet.PacketHeader, message2 message.Mess
 	return stream
 }
 
-func (server *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 message.Message) {
+func (s *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 message.Message) {
 	emptySequenceID, _ := sequence.NewID(sequence.IDType(0))
 	header := packet.PacketHeader{Mode: packet.NormalMode, Sequence: emptySequenceID, ConnectionID: connection.ID(0)}
 	stream := headerAndMessageToStream(&header, message2)
 
 	// fmt.Printf(">> %s %s\n", addr, message2)
-	server.SendPacketToEndpoint(addr, stream)
+	s.SendPacketToEndpoint(addr, stream)
 }
 
-func (server *Server) SendMessageToConnection(connection *Connection, message2 message.Message, mode packet.Mode) error {
+func (s *Server) SendMessageToConnection(connection *Connection, message2 message.Message, mode packet.Mode) error {
 	stream := writeConnectionHeader(connection, mode)
 	stream.WriteUint8(uint8(message2.Command()))
 	message2.Serialize(stream)
 	// fmt.Printf(">>> %v %v\n", connection, message2)
-	server.SendPacketToConnection(connection, stream)
+	s.SendPacketToConnection(connection, stream)
 	return nil
 }
 
-func (server *Server) tick() error {
-	server.userServer.Tick()
+func (s *Server) tick() error {
+	s.userServer.Tick()
 	var resultErr error
-	for _, connection := range server.connections {
+	for _, connection := range s.connections {
 		for i := 0; i < 3; i++ {
-			err := server.sendStream(connection)
+			err := s.sendStream(connection)
 			if err != nil {
 				if resultErr != nil {
 					resultErr = err
 				}
 			}
 		}
+	}
+
+	nowMilliseconds := brisktime.MonotonicMilliseconds()
+	var deletedConnections []*Connection
+	for _, connection := range s.connections {
+		msSinceReceived := nowMilliseconds - connection.LastReceivedPacketAt
+		if msSinceReceived >= 3000 {
+			connection.Lost()
+			deletedConnections = append(deletedConnections, connection)
+		}
+	}
+
+	for _, deletedConnection := range deletedConnections {
+		delete(s.connections, deletedConnection.ID())
 	}
 
 	if resultErr != nil {
@@ -257,20 +273,20 @@ func writeConnectionHeader(connection *Connection, mode packet.Mode) *outstream.
 	return stream
 }
 
-func (server *Server) sendStream(connection *Connection) error {
+func (s *Server) sendStream(connection *Connection) error {
 	stream := writeConnectionHeader(connection, packet.NormalMode)
 	userErr := connection.userConnection.SendStream(stream)
 	if userErr != nil {
 		return userErr
 	}
-	server.SendPacketToConnection(connection, stream)
+	s.SendPacketToConnection(connection, stream)
 	return nil
 }
 
-func (server *Server) start(ticker *time.Ticker) {
+func (s *Server) start(ticker *time.Ticker) {
 	go func() {
 		for range ticker.C {
-			err := server.tick()
+			err := s.tick()
 			if err != nil {
 				fmt.Printf("Start err %s \n", err)
 			}
@@ -278,7 +294,7 @@ func (server *Server) start(ticker *time.Ticker) {
 	}()
 }
 
-func (server *Server) Forever() error {
+func (s *Server) Forever() error {
 	const portString = ":32001"
 	serverAddress, err := net.ResolveUDPAddr("udp", portString)
 	if err != nil {
@@ -291,20 +307,20 @@ func (server *Server) Forever() error {
 
 	fmt.Printf("Listening to %s\n", portString)
 
-	go server.handleIncomingUDP()
+	go s.handleIncomingUDP()
 	//defer serverConnection.Close()
 	ticker := time.NewTicker(time.Millisecond * 10)
 
-	server.connection = serverConnection
-	server.start(ticker)
+	s.connection = serverConnection
+	s.start(ticker)
 
 	select {}
 
 	return nil
 }
 
-func (server *Server) findExistingConnectionFromEndpointAndChallenge(addr *endpoint.Endpoint, nonce uint32) *Connection {
-	for _, connection := range server.connections {
+func (s *Server) findExistingConnectionFromEndpointAndChallenge(addr *endpoint.Endpoint, nonce uint32) *Connection {
+	for _, connection := range s.connections {
 		if connection.Addr().Equal(addr) && connection.nonce == nonce {
 			return connection
 		}
@@ -313,23 +329,30 @@ func (server *Server) findExistingConnectionFromEndpointAndChallenge(addr *endpo
 	return nil
 }
 
-func (server *Server) findFreeConnectionID() (connection.ID, error) {
-	for i := connection.ID(1); i < connection.ID(0xffff); i++ {
-		if _, exists := server.connections[i]; !exists {
-			return i, nil
+func (s *Server) findFreeConnectionID() (connection.ID, error) {
+	idToCheckValue := s.lastAllocatedConnectionIDValue
+	for i := 0; i < 65536; i++ {
+		idToCheckValue += 61
+		if idToCheckValue == 0 {
+			continue
+		}
+		idToCheck := connection.ID(idToCheckValue)
+		if _, exists := s.connections[idToCheck]; !exists {
+			s.lastAllocatedConnectionIDValue = idToCheckValue
+			return idToCheck, nil
 		}
 	}
 
 	return 0, fmt.Errorf("no free connections")
 }
 
-func (server *Server) createConnection(endpoint *endpoint.Endpoint, nonce uint32) (*Connection, error) {
-	connectionID, err := server.findFreeConnectionID()
+func (s *Server) createConnection(endpoint *endpoint.Endpoint, nonce uint32) (*Connection, error) {
+	connectionID, err := s.findFreeConnectionID()
 	if err != nil {
 		return nil, err
 	}
-	newConnection := NewConnection(server, connectionID, endpoint, nonce)
-	server.connections[connectionID] = newConnection
+	newConnection := NewConnection(s, connectionID, endpoint, nonce)
+	s.connections[connectionID] = newConnection
 
 	return newConnection, nil
 }
