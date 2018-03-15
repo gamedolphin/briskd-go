@@ -164,6 +164,7 @@ func (s *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 				}
 			} else {
 				connection.ReceivedPacket(uint(len(buf)))
+				connection.DebugIncomingPacket(buf[inStream.Tell():], brisktime.MonotonicMilliseconds())
 				handleErr := connection.handleStream(&inStream)
 				if handleErr != nil {
 					return handleErr
@@ -287,10 +288,13 @@ func writeConnectionHeader(connection *Connection, mode packet.Mode) *outstream.
 
 func (s *Server) sendStream(connection *Connection) error {
 	stream := writeConnectionHeader(connection, packet.NormalMode)
+	startPosition := stream.Tell()
 	userErr := connection.userConnection.SendStream(stream)
 	if userErr != nil {
 		return userErr
 	}
+	connection.DebugOutgoingPacket(stream.Octets()[startPosition:], brisktime.MonotonicMilliseconds())
+
 	s.SendPacketToConnection(connection, stream)
 	return nil
 }

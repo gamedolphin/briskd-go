@@ -29,6 +29,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"os"
 
 	"github.com/piot/briskd-go/src/communication"
 	"github.com/piot/briskd-go/src/connection"
@@ -49,11 +50,16 @@ type Connection struct {
 	LastReceivedPacketAt int64
 	runningStats         connection.RunningStats
 	stats                connection.Stats
+	debugDumpFile        *os.File
+	writeDebugDumpFile   bool
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
 	nextOutSequenceID, _ := sequence.NewID(sequence.MaxIDValue)
 	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID, LastReceivedPacketAt: brisktime.MonotonicMilliseconds()}
+	if c.writeDebugDumpFile {
+		c.debugDumpFile, _ = os.Create(fmt.Sprintf("connection_%d.ibd", id))
+	}
 	return c
 }
 
@@ -84,6 +90,29 @@ func (c *Connection) ID() connection.ID {
 
 func (c *Connection) Send(stream *outstream.OutStream) error {
 	return c.userConnection.SendStream(stream)
+}
+
+func (c *Connection) writePacket(cmd uint8, monotonicTimeMs int64, b []byte) {
+	o := c.debugDumpFile
+	s := outstream.New()
+	s.WriteUint8(cmd)
+	s.WriteUint16(uint16(len(b)))
+	s.WriteUint64(uint64(monotonicTimeMs))
+	s.WriteOctets(b)
+	o.Write(s.Octets())
+	o.Sync()
+}
+
+func (c *Connection) DebugIncomingPacket(b []byte, monotonicTimeMs int64) {
+	if c.writeDebugDumpFile {
+		c.writePacket(0x01, monotonicTimeMs, b)
+	}
+}
+
+func (c *Connection) DebugOutgoingPacket(b []byte, monotonicTimeMs int64) {
+	if c.writeDebugDumpFile {
+		c.writePacket(0x81, monotonicTimeMs, b)
+	}
 }
 
 func (c *Connection) handleStream(stream *instream.InStream) error {
