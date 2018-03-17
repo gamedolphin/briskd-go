@@ -51,13 +51,12 @@ type Connection struct {
 	runningStats         connection.RunningStats
 	stats                connection.Stats
 	debugDumpFile        *os.File
-	writeDebugDumpFile   bool
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
 	nextOutSequenceID, _ := sequence.NewID(sequence.MaxIDValue)
 	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID, LastReceivedPacketAt: brisktime.MonotonicMilliseconds()}
-	if c.writeDebugDumpFile {
+	if server.debugEnabled {
 		c.debugDumpFile, _ = os.Create(fmt.Sprintf("connection_%d.ibd", id))
 	}
 	return c
@@ -104,20 +103,20 @@ func (c *Connection) writePacket(cmd uint8, monotonicTimeMs int64, b []byte) {
 }
 
 func (c *Connection) DebugIncomingPacket(b []byte, monotonicTimeMs int64) {
-	if c.writeDebugDumpFile {
+	if c.debugDumpFile != nil {
 		c.writePacket(0x01, monotonicTimeMs, b)
 	}
 }
 
 func (c *Connection) DebugOutgoingPacket(b []byte, monotonicTimeMs int64) {
-	if c.writeDebugDumpFile {
+	if c.debugDumpFile != nil {
 		c.writePacket(0x81, monotonicTimeMs, b)
 	}
 }
 
-func (c *Connection) handleStream(stream *instream.InStream) error {
+func (c *Connection) handleStream(stream *instream.InStream, octetCount uint) error {
 	//fmt.Printf("<< %v %v\n", c, stream)
-	userErr := c.userConnection.HandleStream(stream)
+	userErr := c.userConnection.HandleStream(stream, octetCount)
 	if userErr != nil {
 		fmt.Printf("error:%v\n", userErr)
 	}
@@ -127,6 +126,10 @@ func (c *Connection) handleStream(stream *instream.InStream) error {
 func (c *Connection) Lost() {
 	fmt.Printf("Connection Lost %v\n", c)
 	c.userConnection.Lost()
+	if c.debugDumpFile != nil {
+		c.debugDumpFile.Close()
+		c.debugDumpFile = nil
+	}
 }
 
 func (c *Connection) String() string {

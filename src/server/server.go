@@ -51,6 +51,7 @@ type Server struct {
 	userServer                     communication.Server
 	lastAllocatedConnectionIDValue uint16
 	lastTimeStatsCalculatedAt      int64
+	debugEnabled                   bool
 }
 
 func (s *Server) SendPacketToConnection(conn *Connection, stream *outstream.OutStream) {
@@ -107,7 +108,6 @@ func (s *Server) challenge(addr *endpoint.Endpoint, challengeMessage *commands.C
 }
 
 func (s *Server) handleOOBMessage(addr *endpoint.Endpoint, msg message.Message, connection *Connection) error {
-	fmt.Printf("OOB %s\n ", msg)
 
 	switch msg.Command() {
 	case packet.OobPacketTypeChallenge:
@@ -163,9 +163,11 @@ func (s *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 					return handleErr
 				}
 			} else {
+				packetOctetCount := len(buf)
+				userPacketStart := inStream.Tell()
 				connection.ReceivedPacket(uint(len(buf)))
-				connection.DebugIncomingPacket(buf[inStream.Tell():], brisktime.MonotonicMilliseconds())
-				handleErr := connection.handleStream(&inStream)
+				connection.DebugIncomingPacket(buf[userPacketStart:], brisktime.MonotonicMilliseconds())
+				handleErr := connection.handleStream(&inStream, uint(packetOctetCount-userPacketStart))
 				if handleErr != nil {
 					return handleErr
 				}
@@ -178,8 +180,8 @@ func (s *Server) handlePacket(buf []byte, addr *endpoint.Endpoint) error {
 }
 
 // New : Creates a new server
-func New(userServer communication.Server) Server {
-	return Server{connections: make(map[connection.ID]*Connection), userServer: userServer}
+func New(userServer communication.Server, enableDebug bool) Server {
+	return Server{connections: make(map[connection.ID]*Connection), userServer: userServer, debugEnabled: enableDebug}
 }
 
 func (s *Server) handleIncomingUDP() {
@@ -289,11 +291,16 @@ func writeConnectionHeader(connection *Connection, mode packet.Mode) *outstream.
 func (s *Server) sendStream(connection *Connection) error {
 	stream := writeConnectionHeader(connection, packet.NormalMode)
 	startPosition := stream.Tell()
+	//hexPayloadBefore := hex.Dump(stream.Octets())
+	//fmt.Println("Before Send ", hexPayloadBefore, " to ", connection)
 	userErr := connection.userConnection.SendStream(stream)
 	if userErr != nil {
 		return userErr
 	}
+
 	connection.DebugOutgoingPacket(stream.Octets()[startPosition:], brisktime.MonotonicMilliseconds())
+	//hexPayload := hex.Dump(stream.Octets())
+	//fmt.Println("Sending ", hexPayload, " to ", connection)
 
 	s.SendPacketToConnection(connection, stream)
 	return nil
@@ -310,8 +317,8 @@ func (s *Server) start(ticker *time.Ticker) {
 	}()
 }
 
-func (s *Server) Forever() error {
-	const portString = ":32001"
+func (s *Server) Forever(listenPort int) error {
+	portString := fmt.Sprintf(":%d", listenPort)
 	serverAddress, err := net.ResolveUDPAddr("udp", portString)
 	if err != nil {
 		return fmt.Errorf("Error:%v ", err)
