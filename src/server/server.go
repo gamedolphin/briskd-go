@@ -242,12 +242,16 @@ func (s *Server) tick() error {
 	s.userServer.Tick()
 	var resultErr error
 	for _, connection := range s.connections {
-		for i := 0; i < 1; i++ {
-			err := s.sendStream(connection)
+		const maxBurstOfPackets = 20
+		for i := 0; i < maxBurstOfPackets; i++ {
+			done, err := s.sendStream(connection)
 			if err != nil {
 				if resultErr != nil {
 					resultErr = err
 				}
+			}
+			if done {
+				break
 			}
 		}
 	}
@@ -288,14 +292,14 @@ func writeConnectionHeader(connection *Connection, mode packet.Mode) *outstream.
 	return stream
 }
 
-func (s *Server) sendStream(connection *Connection) error {
+func (s *Server) sendStream(connection *Connection) (bool, error) {
 	stream := writeConnectionHeader(connection, packet.NormalMode)
 	startPosition := stream.Tell()
 	//hexPayloadBefore := hex.Dump(stream.Octets())
 	//fmt.Println("Before Send ", hexPayloadBefore, " to ", connection)
-	userErr := connection.userConnection.SendStream(stream)
+	done, userErr := connection.userConnection.SendStream(stream)
 	if userErr != nil {
-		return userErr
+		return true, userErr
 	}
 
 	connection.DebugOutgoingPacket(stream.Octets()[startPosition:], brisktime.MonotonicMilliseconds())
@@ -303,7 +307,7 @@ func (s *Server) sendStream(connection *Connection) error {
 	//fmt.Println("Sending ", hexPayload, " to ", connection)
 
 	s.SendPacketToConnection(connection, stream)
-	return nil
+	return done, nil
 }
 
 func (s *Server) start(ticker *time.Ticker) {

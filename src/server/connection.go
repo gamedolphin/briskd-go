@@ -87,7 +87,7 @@ func (c *Connection) ID() connection.ID {
 	return c.id
 }
 
-func (c *Connection) Send(stream *outstream.OutStream) error {
+func (c *Connection) Send(stream *outstream.OutStream) (bool, error) {
 	return c.userConnection.SendStream(stream)
 }
 

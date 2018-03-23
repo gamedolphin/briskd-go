@@ -34,7 +34,7 @@ import (
 
 type Connection interface {
 	HandleStream(stream *instream.InStream, octetCount uint) error
-	SendStream(stream *outstream.OutStream) error
+	SendStream(stream *outstream.OutStream) (bool, error)
 	Lost() error
 }
 
