@@ -81,7 +81,6 @@ func (s *Server) fetchConnection(addr *endpoint.Endpoint, connectionID connectio
 }
 
 func (s *Server) onTimeSync(addr *endpoint.Endpoint, timesyncRequest *commands.TimeSyncRequest, connection *Connection) error {
-	fmt.Printf("on_timesync: %v\n", timesyncRequest)
 	localTime := uint64(brisktime.MonotonicMilliseconds())
 	response := commands.NewTimeSyncResponse(timesyncRequest.RemoteTime, localTime)
 	s.SendMessageToConnection(connection, response, packet.OobMode)
@@ -191,7 +190,7 @@ func (s *Server) handleIncomingUDP() {
 		packet := buf[0:n]
 		addrEndpoint := endpoint.New(addr)
 		//hexPayload := hex.Dump(packet)
-		//fmt.Println("Received ", hexPayload, " from ", addr)
+		// fmt.Println("Received ", hexPayload, " from ", addr)
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
@@ -205,7 +204,7 @@ func (s *Server) handleIncomingUDP() {
 // SendPacketToEndpoint : Sends one packet to endpoint without rate limit
 func (s *Server) SendPacketToEndpoint(addr *endpoint.Endpoint, stream *outstream.OutStream) {
 	octets := stream.Octets()
-	// hexPayload := hex.Dump(octets)
+	//hexPayload := hex.Dump(octets)
 	//fmt.Println("Sending ", hexPayload, " to ", addr)
 	s.connection.WriteToUDP(octets, addr.UDPAddr())
 }
@@ -225,7 +224,7 @@ func (s *Server) SendMessageToEndpoint(addr *endpoint.Endpoint, message2 message
 	header := packet.PacketHeader{Mode: packet.NormalMode, Sequence: emptySequenceID, ConnectionID: connection.ID(0)}
 	stream := headerAndMessageToStream(&header, message2)
 
-	// fmt.Printf(">> %s %s\n", addr, message2)
+	fmt.Printf(">> %s %s\n", addr, message2)
 	s.SendPacketToEndpoint(addr, stream)
 }
 
@@ -233,7 +232,7 @@ func (s *Server) SendMessageToConnection(connection *Connection, message2 messag
 	stream := writeConnectionHeader(connection, mode)
 	stream.WriteUint8(uint8(message2.Command()))
 	message2.Serialize(stream)
-	// fmt.Printf(">>> %v %v\n", connection, message2)
+	fmt.Printf(">>> %v %v\n", connection, message2)
 	s.SendPacketToConnection(connection, stream)
 	return nil
 }
@@ -304,7 +303,7 @@ func (s *Server) sendStream(connection *Connection) (bool, error) {
 
 	connection.DebugOutgoingPacket(stream.Octets()[startPosition:], brisktime.MonotonicMilliseconds())
 	//hexPayload := hex.Dump(stream.Octets())
-	//fmt.Println("Sending ", hexPayload, " to ", connection)
+	//fmt.Println("Sending ", len(stream.Octets()), " octets ", hexPayload, " to ", connection)
 
 	s.SendPacketToConnection(connection, stream)
 	return done, nil
