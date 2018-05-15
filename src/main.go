@@ -27,12 +27,42 @@ SOFTWARE.
 package main
 
 import (
-	"fmt"
+	"github.com/fatih/color"
+	"github.com/piot/briskd-go/src/communication"
+	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/server"
+	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
+type FakeConnection struct {
+}
+
+func (FakeConnection) HandleStream(stream *instream.InStream, octetCount uint) error {
+	return nil
+}
+func (FakeConnection) SendStream(stream *outstream.OutStream) (bool, error) {
+	stream.WriteUint8(0x80)
+	return false, nil
+}
+func (FakeConnection) Lost() error {
+	return nil
+}
+
+type FakeServer struct {
+}
+
+func (FakeServer) CreateConnection(id connection.ID) communication.Connection {
+	return FakeConnection{}
+}
+
+func (FakeServer) Tick() {
+
+}
+
 func main() {
-	fmt.Printf("briskd 0.1 booting\n")
-	instance := server.New(nil)
-	instance.Forever()
+	color.Cyan("briskd example server 0.2\n")
+	fakeServer := FakeServer{}
+	instance := server.New(fakeServer, true)
+	instance.Forever(32002)
 }
