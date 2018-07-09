@@ -292,6 +292,9 @@ func writeConnectionHeader(connection *Connection, mode packet.Mode) *outstream.
 }
 
 func (s *Server) sendStream(connection *Connection) (bool, error) {
+	if connection.userConnection == nil {
+		return true, nil
+	}
 	stream := writeConnectionHeader(connection, packet.NormalMode)
 	startPosition := stream.Tell()
 	//hexPayloadBefore := hex.Dump(stream.Octets())
