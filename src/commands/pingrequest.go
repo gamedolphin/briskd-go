@@ -24,22 +24,41 @@ SOFTWARE.
 
 */
 
-package packet
+package commands
 
-type Mode int
+import (
+	"fmt"
 
-const (
-	NormalMode Mode = 1
-	OobMode    Mode = 2
+	"github.com/piot/briskd-go/src/packet"
+	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
-type PacketCmd int
+type PingRequest struct {
+	RemoteTime uint64
+	Info       TendInfo
+}
 
-const (
-	OobPacketTypeChallenge         PacketCmd = 1
-	OobPacketTypeChallengeResponse PacketCmd = 2
-	OobPacketTypeTimeSyncRequest   PacketCmd = 3
-	OobPacketTypeTimeSyncResponse  PacketCmd = 4
-	OobPacketTypePingRequest       PacketCmd = 5
-	OobPacketTypePongResponse      PacketCmd = 6
-)
+func NewPingRequest(remoteTime uint64, info TendInfo) *PingRequest {
+	return &PingRequest{RemoteTime: remoteTime, Info: info}
+}
+
+func (c *PingRequest) Serialize(stream *outstream.OutStream) error {
+	stream.WriteUint64(c.RemoteTime)
+	c.Info.Serialize(stream)
+	return nil
+}
+
+func (c *PingRequest) Deserialize(stream *instream.InStream) error {
+	c.RemoteTime, _ = stream.ReadUint64()
+	c.Info, _ = TendDeserialize(stream)
+	return nil
+}
+
+func (c *PingRequest) Command() packet.PacketCmd {
+	return packet.OobPacketTypePingRequest
+}
+
+func (c *PingRequest) String() string {
+	return fmt.Sprintf("[PingRequest remote %v tend %v", c.RemoteTime, c.Info)
+}

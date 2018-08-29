@@ -24,22 +24,14 @@ SOFTWARE.
 
 */
 
-package packet
+package commands
 
-type Mode int
+import "github.com/piot/brook-go/src/instream"
 
-const (
-	NormalMode Mode = 1
-	OobMode    Mode = 2
-)
-
-type PacketCmd int
-
-const (
-	OobPacketTypeChallenge         PacketCmd = 1
-	OobPacketTypeChallengeResponse PacketCmd = 2
-	OobPacketTypeTimeSyncRequest   PacketCmd = 3
-	OobPacketTypeTimeSyncResponse  PacketCmd = 4
-	OobPacketTypePingRequest       PacketCmd = 5
-	OobPacketTypePongResponse      PacketCmd = 6
-)
+func TendDeserialize(stream *instream.InStream) (TendInfo, error) {
+	c := TendInfo{}
+	c.PacketSequenceID, _ = stream.ReadUint8()
+	c.ReceivedSequenceID, _ = stream.ReadUint8()
+	c.ReceivedMask, _ = stream.ReadUint32()
+	return c, nil
+}

@@ -24,22 +24,44 @@ SOFTWARE.
 
 */
 
-package packet
+package commands
 
-type Mode int
+import (
+	"fmt"
 
-const (
-	NormalMode Mode = 1
-	OobMode    Mode = 2
+	"github.com/piot/briskd-go/src/packet"
+	"github.com/piot/brook-go/src/instream"
+	"github.com/piot/brook-go/src/outstream"
 )
 
-type PacketCmd int
+type PongResponse struct {
+	EchoedTime uint64
+	LocalTime  uint64
+	Info       TendInfo
+}
 
-const (
-	OobPacketTypeChallenge         PacketCmd = 1
-	OobPacketTypeChallengeResponse PacketCmd = 2
-	OobPacketTypeTimeSyncRequest   PacketCmd = 3
-	OobPacketTypeTimeSyncResponse  PacketCmd = 4
-	OobPacketTypePingRequest       PacketCmd = 5
-	OobPacketTypePongResponse      PacketCmd = 6
-)
+func NewPongResponse(echoedTime uint64, localTime uint64, info TendInfo) *PongResponse {
+	return &PongResponse{EchoedTime: echoedTime, LocalTime: localTime, Info: info}
+}
+
+func (c *PongResponse) Serialize(stream *outstream.OutStream) error {
+	stream.WriteUint64(c.EchoedTime)
+	stream.WriteUint64(c.LocalTime)
+	c.Info.Serialize(stream)
+	return nil
+}
+
+func (c *PongResponse) Deserialize(stream *instream.InStream) error {
+	stream.ReadUint64()
+	stream.ReadUint64()
+	c.Info, _ = TendDeserialize(stream)
+	return nil
+}
+
+func (c *PongResponse) Command() packet.PacketCmd {
+	return packet.OobPacketTypePongResponse
+}
+
+func (c *PongResponse) String() string {
+	return fmt.Sprintf("[PongResponse echo %v local %v tend: %v", c.EchoedTime, c.LocalTime, c.Info)
+}

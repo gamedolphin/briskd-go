@@ -24,22 +24,14 @@ SOFTWARE.
 
 */
 
-package packet
+package commands
 
-type Mode int
+import "github.com/piot/brook-go/src/outstream"
 
-const (
-	NormalMode Mode = 1
-	OobMode    Mode = 2
-)
+func (t *TendInfo) Serialize(stream *outstream.OutStream) error {
+	stream.WriteUint8(t.PacketSequenceID)
+	stream.WriteUint8(t.ReceivedSequenceID)
+	stream.WriteUint32(t.ReceivedMask)
 
-type PacketCmd int
-
-const (
-	OobPacketTypeChallenge         PacketCmd = 1
-	OobPacketTypeChallengeResponse PacketCmd = 2
-	OobPacketTypeTimeSyncRequest   PacketCmd = 3
-	OobPacketTypeTimeSyncResponse  PacketCmd = 4
-	OobPacketTypePingRequest       PacketCmd = 5
-	OobPacketTypePongResponse      PacketCmd = 6
-)
+	return nil
+}

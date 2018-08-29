@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/piot/briskd-go/src/commands"
 	"github.com/piot/briskd-go/src/communication"
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/briskd-go/src/endpoint"
@@ -38,6 +39,7 @@ import (
 	brisktime "github.com/piot/briskd-go/src/time"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
+	tend "github.com/piot/tend-go/src"
 )
 
 type Connection struct {
@@ -51,11 +53,13 @@ type Connection struct {
 	runningStats         connection.RunningStats
 	stats                connection.Stats
 	debugDumpFile        *os.File
+	tendOut              *tend.OutgoingLogic
+	tendIn               *tend.IncomingLogic
 }
 
 func NewConnection(server *Server, id connection.ID, endpoint *endpoint.Endpoint, nonce uint32) *Connection {
 	nextOutSequenceID, _ := sequence.NewID(sequence.MaxIDValue)
-	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID, LastReceivedPacketAt: brisktime.MonotonicMilliseconds()}
+	c := &Connection{server: server, id: id, endpoint: endpoint, nonce: nonce, NextOutSequenceID: nextOutSequenceID, LastReceivedPacketAt: brisktime.MonotonicMilliseconds(), tendOut: tend.NewOutgoingLogic(), tendIn: tend.NewIncomingLogic()}
 	if server.debugEnabled {
 		c.debugDumpFile, _ = os.Create(fmt.Sprintf("connection_%d.ibd", id))
 	}
@@ -91,6 +95,18 @@ func (c *Connection) Send(stream *outstream.OutStream) (bool, error) {
 	return c.userConnection.SendStream(stream)
 }
 
+func (c *Connection) CanSendReliable() bool {
+	return c.tendOut.CanIncrementOutgoingSequence()
+}
+
+func (c *Connection) IncreaseOutgoingSequenceID() commands.TendInfo {
+	c.tendOut.IncreaseOutgoingSequenceID()
+	return commands.TendInfo{
+		PacketSequenceID:   c.tendOut.OutgoingSequenceID().Value(),
+		ReceivedSequenceID: c.tendIn.ReceivedHeader().SequenceID.Value(),
+		ReceivedMask:       c.tendIn.ReceivedHeader().Mask.Bits()}
+}
+
 func (c *Connection) writePacket(cmd uint8, monotonicTimeMs int64, b []byte) {
 	o := c.debugDumpFile
 	s := outstream.New()
@@ -116,6 +132,12 @@ func (c *Connection) DebugOutgoingPacket(b []byte, monotonicTimeMs int64) {
 
 func (c *Connection) handleStream(stream *instream.InStream, octetCount uint) error {
 	//fmt.Printf("<< %v %v\n", c, stream)
+	tendInfo, tendErr := commands.TendDeserialize(stream)
+	if tendErr != nil {
+		return tendErr
+	}
+	c.tendIn.ReceivedToUs(tend.NewSequenceID(tendInfo.PacketSequenceID))
+	c.tendOut.ReceivedByRemote(tend.Header{SequenceID: tend.NewSequenceID(tendInfo.ReceivedSequenceID), Mask: tend.NewReceiveMask(tendInfo.ReceivedMask)})
 	userErr := c.userConnection.HandleStream(stream, octetCount)
 	if userErr != nil {
 		fmt.Printf("error:%v\n", userErr)

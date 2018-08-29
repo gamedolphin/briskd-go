@@ -27,6 +27,7 @@ SOFTWARE.
 package server
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/piot/briskd-go/src/commandcreator"
@@ -189,8 +190,11 @@ func (s *Server) handleIncomingUDP() {
 		n, addr, err := s.connection.ReadFromUDP(buf)
 		packet := buf[0:n]
 		addrEndpoint := endpoint.New(addr)
-		//hexPayload := hex.Dump(packet)
-		// fmt.Println("Received ", hexPayload, " from ", addr)
+		debug := false
+		if debug {
+			hexPayload := hex.Dump(packet)
+			fmt.Println("Received ", hexPayload, " from ", addr)
+		}
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
@@ -295,8 +299,16 @@ func (s *Server) sendStream(connection *Connection) (bool, error) {
 	if connection.userConnection == nil {
 		return true, nil
 	}
+	if !connection.CanSendReliable() {
+		return true, nil
+	}
+
 	stream := writeConnectionHeader(connection, packet.NormalMode)
 	startPosition := stream.Tell()
+
+	tendInfo := connection.IncreaseOutgoingSequenceID()
+
+	tendInfo.Serialize(stream)
 	//hexPayloadBefore := hex.Dump(stream.Octets())
 	//fmt.Println("Before Send ", hexPayloadBefore, " to ", connection)
 	done, userErr := connection.userConnection.SendStream(stream)

@@ -43,6 +43,8 @@ func createMessageFromStream(oobType packet.PacketCmd) message.Message {
 		return &commands.ChallengeResponseMessage{}
 	case packet.OobPacketTypeTimeSyncRequest:
 		return &commands.TimeSyncRequest{}
+	case packet.OobPacketTypePingRequest:
+		return &commands.PingRequest{}
 	}
 
 	return nil

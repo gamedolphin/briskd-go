@@ -24,22 +24,16 @@ SOFTWARE.
 
 */
 
-package packet
+package commands
 
-type Mode int
+import "fmt"
 
-const (
-	NormalMode Mode = 1
-	OobMode    Mode = 2
-)
+type TendInfo struct {
+	PacketSequenceID   uint8
+	ReceivedSequenceID uint8
+	ReceivedMask       uint32
+}
 
-type PacketCmd int
-
-const (
-	OobPacketTypeChallenge         PacketCmd = 1
-	OobPacketTypeChallengeResponse PacketCmd = 2
-	OobPacketTypeTimeSyncRequest   PacketCmd = 3
-	OobPacketTypeTimeSyncResponse  PacketCmd = 4
-	OobPacketTypePingRequest       PacketCmd = 5
-	OobPacketTypePongResponse      PacketCmd = 6
-)
+func (c *TendInfo) String() string {
+	return fmt.Sprintf("[TendInfo packetID %v receivedID %v mask %v", c.PacketSequenceID, c.ReceivedSequenceID, c.ReceivedMask)
+}
