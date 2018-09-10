@@ -130,6 +130,22 @@ func (c *Connection) DebugOutgoingPacket(b []byte, monotonicTimeMs int64) {
 	}
 }
 
+func (c *Connection) handleTend() error {
+	for c.tendOut.QueueCount() > 0 {
+		status, statusErr := c.tendOut.Dequeue()
+		if statusErr != nil {
+			return statusErr
+		}
+		if status.WasDelivered {
+			c.userConnection.ReceivedByRemote(status.SequenceID)
+		} else {
+			c.userConnection.Dropped(status.SequenceID)
+		}
+	}
+
+	return nil
+}
+
 func (c *Connection) handleStream(stream *instream.InStream, octetCount uint) error {
 	//fmt.Printf("<< %v %v\n", c, stream)
 	tendInfo, tendErr := commands.TendDeserialize(stream)
@@ -138,6 +154,10 @@ func (c *Connection) handleStream(stream *instream.InStream, octetCount uint) er
 	}
 	c.tendIn.ReceivedToUs(tend.NewSequenceID(tendInfo.PacketSequenceID))
 	c.tendOut.ReceivedByRemote(tend.Header{SequenceID: tend.NewSequenceID(tendInfo.ReceivedSequenceID), Mask: tend.NewReceiveMask(tendInfo.ReceivedMask)})
+	handleTendErr := c.handleTend()
+	if handleTendErr != nil {
+		return handleTendErr
+	}
 	userErr := c.userConnection.HandleStream(stream, octetCount)
 	if userErr != nil {
 		fmt.Printf("error:%v\n", userErr)

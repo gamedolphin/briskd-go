@@ -30,12 +30,15 @@ import (
 	"github.com/piot/briskd-go/src/connection"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
+	"github.com/piot/tend-go/src"
 )
 
 type Connection interface {
 	HandleStream(stream *instream.InStream, octetCount uint) error
 	SendStream(stream *outstream.OutStream) (bool, error)
 	Lost() error
+	ReceivedByRemote(sequenceID tend.SequenceID)
+	Dropped(sequenceID tend.SequenceID)
 }
 
 type Server interface {

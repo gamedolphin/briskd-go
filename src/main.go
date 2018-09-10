@@ -33,6 +33,7 @@ import (
 	"github.com/piot/briskd-go/src/server"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
+	"github.com/piot/tend-go/src"
 )
 
 type FakeConnection struct {
@@ -47,6 +48,14 @@ func (FakeConnection) SendStream(stream *outstream.OutStream) (bool, error) {
 }
 func (FakeConnection) Lost() error {
 	return nil
+}
+
+func (FakeConnection) Dropped(sequeceID tend.SequenceID) {
+
+}
+
+func (FakeConnection) ReceivedByRemote(sequeceID tend.SequenceID) {
+
 }
 
 type FakeServer struct {
