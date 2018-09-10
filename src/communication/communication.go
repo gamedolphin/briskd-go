@@ -35,7 +35,7 @@ import (
 
 type Connection interface {
 	HandleStream(stream *instream.InStream, octetCount uint) error
-	SendStream(stream *outstream.OutStream) (bool, error)
+	SendStream(sequenceID tend.SequenceID, stream *outstream.OutStream) (bool, error)
 	Lost() error
 	ReceivedByRemote(sequenceID tend.SequenceID)
 	Dropped(sequenceID tend.SequenceID)

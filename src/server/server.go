@@ -311,7 +311,7 @@ func (s *Server) sendStream(connection *Connection) (bool, error) {
 	tendInfo.Serialize(stream)
 	//hexPayloadBefore := hex.Dump(stream.Octets())
 	//fmt.Println("Before Send ", hexPayloadBefore, " to ", connection)
-	done, userErr := connection.userConnection.SendStream(stream)
+	done, userErr := connection.userConnection.SendStream(connection.tendOut.OutgoingSequenceID(), stream)
 	if userErr != nil {
 		return true, userErr
 	}

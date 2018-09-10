@@ -42,7 +42,7 @@ type FakeConnection struct {
 func (FakeConnection) HandleStream(stream *instream.InStream, octetCount uint) error {
 	return nil
 }
-func (FakeConnection) SendStream(stream *outstream.OutStream) (bool, error) {
+func (FakeConnection) SendStream(sequenceID tend.SequenceID, stream *outstream.OutStream) (bool, error) {
 	stream.WriteUint8(0x80)
 	return false, nil
 }
@@ -50,11 +50,11 @@ func (FakeConnection) Lost() error {
 	return nil
 }
 
-func (FakeConnection) Dropped(sequeceID tend.SequenceID) {
+func (FakeConnection) Dropped(sequenceID tend.SequenceID) {
 
 }
 
-func (FakeConnection) ReceivedByRemote(sequeceID tend.SequenceID) {
+func (FakeConnection) ReceivedByRemote(sequenceID tend.SequenceID) {
 
 }
 

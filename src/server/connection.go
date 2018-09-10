@@ -92,7 +92,7 @@ func (c *Connection) ID() connection.ID {
 }
 
 func (c *Connection) Send(stream *outstream.OutStream) (bool, error) {
-	return c.userConnection.SendStream(stream)
+	return c.userConnection.SendStream(c.tendOut.OutgoingSequenceID(), stream)
 }
 
 func (c *Connection) CanSendReliable() bool {
