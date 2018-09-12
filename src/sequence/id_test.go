@@ -30,44 +30,38 @@ import (
 	"testing"
 )
 
+func checkDistance(t *testing.T, from ID, to ID, expected int) {
+	distance := from.Distance(to)
+	if distance != expected {
+		t.Errorf("Not correct distance:%v. Expected %v (from:%v to:%v)", distance, expected, from, to)
+	}
+}
+
 func TestDistance(t *testing.T) {
 	first, _ := NewID(10)
-	second, _ := NewID(253)
-
-	distance := second.Distance(first)
-	if distance != 13 {
-		t.Errorf("Not correct distance:%d, expected 13", distance)
-	}
+	second, _ := NewID(MaxIDValue)
+	checkDistance(t, second, first, 11)
 }
 
 func TestPreviousID(t *testing.T) {
 	first, _ := NewID(10)
 	second, _ := NewID(9)
 
-	distance := first.Distance(second)
-	if distance != 255 {
-		t.Errorf("Not correct distance:%d, expected 255", distance)
-	}
+	checkDistance(t, first, second, WrapAroundValue-1)
 }
 
 func TestPreviousIDWrap(t *testing.T) {
 	first, _ := NewID(0)
-	second, _ := NewID(255)
+	second, _ := NewID(MaxIDValue)
 
-	distance := first.Distance(second)
-	if distance != 255 {
-		t.Errorf("Not correct distance:%d, expected 255", distance)
-	}
+	checkDistance(t, first, second, MaxIDValue)
 }
 
 func TestNextWrap(t *testing.T) {
-	first, _ := NewID(255)
-	second, _ := NewID(125)
+	first, _ := NewID(MaxIDValue)
+	second, _ := NewID(HalfMaxIDValue - 1)
 
-	distance := first.Distance(second)
-	if distance != 126 {
-		t.Errorf("Not correct distance:%d, expected 126", distance)
-	}
+	checkDistance(t, first, second, HalfMaxIDValue)
 
 	isSuccessor := first.IsSuccessor(second)
 	if !isSuccessor {

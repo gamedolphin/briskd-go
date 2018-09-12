@@ -29,6 +29,7 @@ package sequence
 type IDType uint8
 
 const MaxIDValue = 127
+const WrapAroundValue = 128
 const HalfMaxIDValue = MaxIDValue / 2
 
 type ID struct {
@@ -52,13 +53,13 @@ func (i ID) Raw() IDType {
 }
 
 func (i ID) Next() ID {
-	return ID{id: (i.id + 1) % MaxIDValue}
+	return ID{id: (i.id + 1) % WrapAroundValue}
 }
 
 func (i ID) Distance(next ID) int {
 	nextValue := int(next.id)
 	if next.id < i.id {
-		nextValue += MaxIDValue
+		nextValue += WrapAroundValue
 	}
 	diff := nextValue - int(i.id)
 	return diff
@@ -66,5 +67,5 @@ func (i ID) Distance(next ID) int {
 
 func (i ID) IsSuccessor(next ID) bool {
 	diff := i.Distance(next)
-	return diff < HalfMaxIDValue
+	return diff <= HalfMaxIDValue
 }
