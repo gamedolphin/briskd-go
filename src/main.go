@@ -28,8 +28,8 @@ package main
 
 import (
 	"github.com/fatih/color"
-	"github.com/piot/briskd-go/src/communication"
-	"github.com/piot/briskd-go/src/connection"
+	"github.com/piot/brisk-protocol-go/src/communication"
+	"github.com/piot/brisk-protocol-go/src/connection"
 	"github.com/piot/briskd-go/src/server"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
