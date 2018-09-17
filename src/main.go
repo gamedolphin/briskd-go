@@ -27,6 +27,8 @@ SOFTWARE.
 package main
 
 import (
+	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/piot/brisk-protocol-go/src/communication"
 	"github.com/piot/brisk-protocol-go/src/connection"
@@ -72,6 +74,9 @@ func (FakeServer) Tick() {
 func main() {
 	color.Cyan("briskd example server 0.2\n")
 	fakeServer := FakeServer{}
-	instance := server.New(fakeServer, true)
-	instance.Forever(32002)
+	instance, instanceErr := server.New(32002, fakeServer, true)
+	if instanceErr != nil {
+		fmt.Printf("Err:%v", instanceErr)
+	}
+	instance.Forever()
 }
