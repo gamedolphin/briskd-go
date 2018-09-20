@@ -42,9 +42,8 @@ type Server struct {
 }
 
 // New : Creates a new server
-func New(listenPort int, userServer connection.UserServer, enableDebug bool) (*Server, error) {
-
-	connectionServer, serverErr := connection.NewServer(listenPort, userServer)
+func New(listenPort int, userServer connection.UserServer, enableDebug bool, dumpPackets bool) (*Server, error) {
+	connectionServer, serverErr := connection.NewServer(listenPort, userServer, dumpPackets)
 	if serverErr != nil {
 		return nil, serverErr
 	}
