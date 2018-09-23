@@ -74,7 +74,9 @@ func (FakeServer) Tick() {
 func main() {
 	color.Cyan("briskd example server 0.2\n")
 	fakeServer := FakeServer{}
-	instance, instanceErr := server.New(32002, fakeServer, true)
+	useDebugConnections := true
+	shouldDumpPackets := true
+	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets)
 	if instanceErr != nil {
 		fmt.Printf("Err:%v", instanceErr)
 	}
