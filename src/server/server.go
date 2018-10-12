@@ -78,7 +78,7 @@ func (s *Server) start(ticker *time.Ticker) {
 }
 
 func (s *Server) Forever() error {
-	ticker := time.NewTicker(time.Millisecond * 1000)
+	ticker := time.NewTicker(time.Millisecond * 100)
 	s.start(ticker)
 
 	select {}
