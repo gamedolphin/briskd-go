@@ -76,7 +76,8 @@ func main() {
 	fakeServer := FakeServer{}
 	useDebugConnections := true
 	shouldDumpPackets := true
-	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets)
+	const debugLogging = true
+	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets, debugLogging)
 	if instanceErr != nil {
 		fmt.Printf("Err:%v", instanceErr)
 	}
