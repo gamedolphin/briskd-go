@@ -80,6 +80,7 @@ func main() {
 	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets, debugLogging)
 	if instanceErr != nil {
 		fmt.Printf("Err:%v", instanceErr)
+		return
 	}
 	instance.Forever()
 }

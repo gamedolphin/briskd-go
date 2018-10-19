@@ -48,6 +48,10 @@ func New(listenPort int, userServer connection.UserServer, enableDebug bool, dum
 		return nil, serverErr
 	}
 
+	if connectionServer == nil {
+		return nil, fmt.Errorf("must have valid connection server")
+	}
+
 	//defer serverConnection.Close()
 
 	s := &Server{debugEnabled: enableDebug, server: connectionServer}
@@ -67,6 +71,9 @@ func (s *Server) tick() error {
 }
 
 func (s *Server) start(ticker *time.Ticker) {
+	if s == nil {
+		return
+	}
 	go func() {
 		for range ticker.C {
 			err := s.tick()
