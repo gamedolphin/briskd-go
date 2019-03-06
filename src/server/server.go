@@ -39,13 +39,17 @@ type Server struct {
 	server                    *connection.Server
 	lastTimeStatsCalculatedAt int64
 	debugEnabled              bool
+	waitTimeInMs              time.Duration
 }
 
 // New : Creates a new server
-func New(listenPort int, userServer connection.UserServer, enableDebug bool, dumpPackets bool, debugLogging bool) (*Server, error) {
+func New(listenPort int, userServer connection.UserServer, updateFrequency int, enableDebug bool, dumpPackets bool, debugLogging bool) (*Server, error) {
 	connectionServer, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, debugLogging)
 	if serverErr != nil {
 		return nil, serverErr
+	}
+	if updateFrequency == 0 {
+		return nil, fmt.Errorf("illegal update frequencey")
 	}
 
 	if connectionServer == nil {
@@ -54,7 +58,7 @@ func New(listenPort int, userServer connection.UserServer, enableDebug bool, dum
 
 	//defer serverConnection.Close()
 
-	s := &Server{debugEnabled: enableDebug, server: connectionServer}
+	s := &Server{debugEnabled: enableDebug, server: connectionServer, waitTimeInMs: 1000 / time.Duration(updateFrequency)}
 	return s, nil
 }
 
@@ -85,7 +89,7 @@ func (s *Server) start(ticker *time.Ticker) {
 }
 
 func (s *Server) Forever() error {
-	ticker := time.NewTicker(time.Millisecond * 100)
+	ticker := time.NewTicker(time.Millisecond * s.waitTimeInMs)
 	s.start(ticker)
 
 	select {}
