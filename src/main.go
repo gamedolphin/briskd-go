@@ -52,12 +52,12 @@ func (FakeConnection) Lost() error {
 	return nil
 }
 
-func (FakeConnection) Dropped(sequenceID tend.SequenceID) {
-
+func (FakeConnection) Dropped(sequenceID tend.SequenceID) error {
+	return nil
 }
 
-func (FakeConnection) ReceivedByRemote(sequenceID tend.SequenceID) {
-
+func (FakeConnection) ReceivedByRemote(sequenceID tend.SequenceID) error {
+	return nil
 }
 
 type FakeServer struct {
