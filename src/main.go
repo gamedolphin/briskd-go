@@ -27,7 +27,7 @@ SOFTWARE.
 package main
 
 import (
-	"fmt"
+	"github.com/piot/log-go/src/clog"
 
 	"github.com/fatih/color"
 	"github.com/piot/brisk-protocol-go/src/communication"
@@ -74,12 +74,13 @@ func (FakeServer) Tick() {
 func main() {
 	color.Cyan("briskd example server 0.2\n")
 	fakeServer := FakeServer{}
+	log := clog.DefaultLog()
 	useDebugConnections := true
 	shouldDumpPackets := true
 	const debugLogging = true
-	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets, debugLogging)
+	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets, log)
 	if instanceErr != nil {
-		fmt.Printf("Err:%v", instanceErr)
+		log.Err(instanceErr)
 		return
 	}
 	instance.Forever()

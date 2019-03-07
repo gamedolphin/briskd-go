@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/piot/brisk-protocol-go/src/connection"
+	"github.com/piot/log-go/src/clog"
 )
 
 type Server struct {
@@ -40,11 +41,12 @@ type Server struct {
 	lastTimeStatsCalculatedAt int64
 	debugEnabled              bool
 	waitTimeInMs              time.Duration
+	log                       *clog.Log
 }
 
 // New : Creates a new server
-func New(listenPort int, userServer connection.UserServer, updateFrequency int, enableDebug bool, dumpPackets bool, debugLogging bool) (*Server, error) {
-	connectionServer, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, debugLogging)
+func New(listenPort int, userServer connection.UserServer, updateFrequency int, log *clog.Log, dumpPackets bool) (*Server, error) {
+	connectionServer, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, log)
 	if serverErr != nil {
 		return nil, serverErr
 	}
@@ -58,19 +60,12 @@ func New(listenPort int, userServer connection.UserServer, updateFrequency int, 
 
 	//defer serverConnection.Close()
 
-	s := &Server{debugEnabled: enableDebug, server: connectionServer, waitTimeInMs: 1000 / time.Duration(updateFrequency)}
+	s := &Server{log: log, server: connectionServer, waitTimeInMs: 1000 / time.Duration(updateFrequency)}
 	return s, nil
 }
 
 func (s *Server) tick() error {
 	s.server.Tick()
-	//s.userServer.Tick()
-	/*
-		if resultErr != nil {
-			fmt.Printf("Error: %s\n", resultErr)
-		}
-		return resultErr
-	*/
 	return nil
 }
 
@@ -82,7 +77,7 @@ func (s *Server) start(ticker *time.Ticker) {
 		for range ticker.C {
 			err := s.tick()
 			if err != nil {
-				fmt.Printf("Start err %s \n", err)
+				s.log.Error("start error", clog.Error("start error", err))
 			}
 		}
 	}()
