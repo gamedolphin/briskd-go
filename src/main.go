@@ -75,10 +75,9 @@ func main() {
 	color.Cyan("briskd example server 0.2\n")
 	fakeServer := FakeServer{}
 	log := clog.DefaultLog()
-	useDebugConnections := true
 	shouldDumpPackets := true
-	const debugLogging = true
-	instance, instanceErr := server.New(32002, fakeServer, useDebugConnections, shouldDumpPackets, log)
+	const frequency = 300
+	instance, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets)
 	if instanceErr != nil {
 		log.Err(instanceErr)
 		return
