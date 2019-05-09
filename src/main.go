@@ -77,7 +77,7 @@ func main() {
 	log := clog.DefaultLog()
 	shouldDumpPackets := true
 	const frequency = 300
-	instance, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets)
+	instance, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, nil)
 	if instanceErr != nil {
 		log.Err(instanceErr)
 		return
