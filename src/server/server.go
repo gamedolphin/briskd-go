@@ -45,23 +45,23 @@ type Server struct {
 }
 
 // New : Creates a new server
-func New(listenPort int, userServer connection.UserServer, updateFrequency int, log *clog.Log, dumpPackets bool, schemaPayload []byte) (*Server, error) {
-	connectionServer, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, schemaPayload, log)
+func New(listenPort int, userServer connection.UserServer, updateFrequency int, log *clog.Log, dumpPackets bool, schemaPayload []byte) (*Server, int, error) {
+	connectionServer, foundPort, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, schemaPayload, log)
 	if serverErr != nil {
-		return nil, serverErr
+		return nil, 0, serverErr
 	}
 	if updateFrequency == 0 {
-		return nil, fmt.Errorf("illegal update frequency")
+		return nil, 0, fmt.Errorf("illegal update frequency")
 	}
 
 	if connectionServer == nil {
-		return nil, fmt.Errorf("must have valid connection server")
+		return nil, 0, fmt.Errorf("must have valid connection server")
 	}
 
 	//defer serverConnection.Close()
 
 	s := &Server{log: log, server: connectionServer, waitTimeInMs: 1000 / time.Duration(updateFrequency)}
-	return s, nil
+	return s, foundPort, nil
 }
 
 func (s *Server) tick() error {
