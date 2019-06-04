@@ -29,7 +29,7 @@ package server
 import (
 	"fmt"
 
-	"time"
+	"github.com/piot/chrono-go/src/chrono"
 
 	"github.com/piot/brisk-protocol-go/src/connection"
 	"github.com/piot/log-go/src/clog"
@@ -40,7 +40,7 @@ type Server struct {
 	server                    *connection.Server
 	lastTimeStatsCalculatedAt int64
 	debugEnabled              bool
-	waitTimeInMs              time.Duration
+	frequency                 int
 	log                       *clog.Log
 }
 
@@ -60,7 +60,7 @@ func New(listenPort int, userServer connection.UserServer, updateFrequency int, 
 
 	//defer serverConnection.Close()
 
-	s := &Server{log: log, server: connectionServer, waitTimeInMs: 1000 / time.Duration(updateFrequency)}
+	s := &Server{log: log, server: connectionServer, frequency: updateFrequency}
 	return s, foundPort, nil
 }
 
@@ -69,23 +69,23 @@ func (s *Server) tick() error {
 	return nil
 }
 
-func (s *Server) start(ticker *time.Ticker) {
+func (s *Server) updateFn() bool {
 	if s == nil {
-		return
+		return false
 	}
-	go func() {
-		for range ticker.C {
-			err := s.tick()
-			if err != nil {
-				s.log.Error("start error", clog.Error("start error", err))
-			}
-		}
-	}()
+	err := s.tick()
+	if err != nil {
+		s.log.Error("start error", clog.Error("start error", err))
+	}
+	return true
 }
 
 func (s *Server) Forever() error {
-	ticker := time.NewTicker(time.Millisecond * s.waitTimeInMs)
-	s.start(ticker)
+	updater, updaterErr := chrono.NewUpdater(s.frequency, s.updateFn)
+	if updaterErr != nil {
+		return updaterErr
+	}
+	updater.Start()
 
 	select {}
 
