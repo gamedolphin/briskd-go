@@ -35,13 +35,13 @@ import (
 	"github.com/piot/briskd-go/src/server"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
-	"github.com/piot/tend-go/src"
+	tend "github.com/piot/tend-go/src"
 )
 
 type FakeConnection struct {
 }
 
-func (FakeConnection) HandleStream(stream *instream.InStream, octetCount uint) error {
+func (FakeConnection) HandleStream(sequenceID tend.SequenceID, stream *instream.InStream, octetCount uint) error {
 	return nil
 }
 func (FakeConnection) SendStream(sequenceID tend.SequenceID, stream *outstream.OutStream) (bool, error) {
@@ -56,7 +56,15 @@ func (FakeConnection) Dropped(sequenceID tend.SequenceID) error {
 	return nil
 }
 
+func (FakeConnection) OnConnected(connectionID communication.ConnectionID) error {
+	return nil
+}
+
 func (FakeConnection) ReceivedByRemote(sequenceID tend.SequenceID) error {
+	return nil
+}
+
+func (FakeConnection) SaveState(stream *outstream.OutStream) error {
 	return nil
 }
 
@@ -77,7 +85,7 @@ func main() {
 	log := clog.DefaultLog()
 	shouldDumpPackets := true
 	const frequency = 300
-	instance, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, nil)
+	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, nil)
 	if instanceErr != nil {
 		log.Err(instanceErr)
 		return
