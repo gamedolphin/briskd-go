@@ -13,6 +13,8 @@ github.com/piot/brisk-protocol-go v0.0.0-20191120221208-08fa228589a0 h1:6qJ+c7B9
 github.com/piot/brisk-protocol-go v0.0.0-20191120221208-08fa228589a0/go.mod h1:cz6BM2ZcLETy+TzK8jd/GezFJwIMTNx3eDylzIywmao=
 github.com/piot/brisk-protocol-go v0.0.0-20191219094032-c76886e2bada h1:ptQ/QWLUFkootfpvB2CxPalD0Zf3EFzV9eovdIM3X90=
 github.com/piot/brisk-protocol-go v0.0.0-20191219094032-c76886e2bada/go.mod h1:VYRmk7yGV6QE4rVd+d5it70XvYk5K7xyj8RagHxqFYU=
+github.com/piot/brisk-protocol-go v0.0.0-20191219094537-ca3ce969debc h1:Rf0w/RPxpp5rdpolkVhu+z43CPd53RK19t2VErV+tqU=
+github.com/piot/brisk-protocol-go v0.0.0-20191219094537-ca3ce969debc/go.mod h1:VYRmk7yGV6QE4rVd+d5it70XvYk5K7xyj8RagHxqFYU=
 github.com/piot/brook-go v0.0.0-20191112122856-044790a8729a h1:byqikXm+ERD8ZDJ1tsXXXefTDJl0Rsdvxr2LsjyQBig=
 github.com/piot/brook-go v0.0.0-20191112122856-044790a8729a/go.mod h1:XOBgIv7ob0m4m0noN1JVeuFrQs3LUxWdaFL+AyP6AGA=
 github.com/piot/chrono-go v0.0.0-20190815095431-7514a247e435 h1:MaO7TOzbY8eQuEmCwt1mi4zcuDx3G2Mc7IDqI+KDnu0=

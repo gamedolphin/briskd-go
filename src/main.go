@@ -71,8 +71,8 @@ func (FakeConnection) SaveState(stream *outstream.OutStream) error {
 type FakeServer struct {
 }
 
-func (FakeServer) CreateConnection(id connection.ID) communication.Connection {
-	return FakeConnection{}
+func (FakeServer) CreateConnection(id connection.ID) (communication.Connection, error) {
+	return FakeConnection{}, nil
 }
 
 func (FakeServer) Tick() {
