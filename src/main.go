@@ -31,6 +31,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/piot/brisk-protocol-go/src/communication"
+	"github.com/piot/brisk-protocol-go/src/meta"
 	"github.com/piot/brisk-protocol-go/src/connection"
 	"github.com/piot/briskd-go/src/server"
 	"github.com/piot/brook-go/src/instream"
@@ -85,7 +86,7 @@ func main() {
 	log := clog.DefaultLog()
 	shouldDumpPackets := true
 	const frequency = 300
-	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, nil)
+	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, meta.Header{}, nil)
 	if instanceErr != nil {
 		log.Err(instanceErr)
 		return
