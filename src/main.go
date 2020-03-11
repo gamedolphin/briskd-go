@@ -30,9 +30,10 @@ import (
 	"github.com/piot/log-go/src/clog"
 
 	"github.com/fatih/color"
+	"github.com/piot/brisk-protocol-go/src/commands"
 	"github.com/piot/brisk-protocol-go/src/communication"
-	"github.com/piot/brisk-protocol-go/src/meta"
 	"github.com/piot/brisk-protocol-go/src/connection"
+	"github.com/piot/brisk-protocol-go/src/meta"
 	"github.com/piot/briskd-go/src/server"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
@@ -72,7 +73,8 @@ func (FakeConnection) SaveState(stream *outstream.OutStream) error {
 type FakeServer struct {
 }
 
-func (FakeServer) CreateConnection(id connection.ID) (communication.Connection, error) {
+func (FakeServer) CreateConnection(id connection.ID,
+	sessionID commands.UniqueSessionID) (communication.Connection, error) {
 	return FakeConnection{}, nil
 }
 
