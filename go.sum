@@ -15,8 +15,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
-github.com/piot/brisk-protocol-go v0.0.0-20200316100235-a877de60fc6e h1:DhlLPwly6QSNvyo97CahoiFnhjBMnf4WFQxfpYw4euY=
-github.com/piot/brisk-protocol-go v0.0.0-20200316100235-a877de60fc6e/go.mod h1:Uxju/MQM1QPQb4PtgLR9S1irf90R83iuD+e/0xJvJX8=
+github.com/piot/brisk-protocol-go v0.0.0-20200428155813-6f31c92b4ce8 h1:T7kC1MtD309GnRLFgCMII6fQ8h4gEYzYrJijPOwX+Ps=
+github.com/piot/brisk-protocol-go v0.0.0-20200428155813-6f31c92b4ce8/go.mod h1:Uxju/MQM1QPQb4PtgLR9S1irf90R83iuD+e/0xJvJX8=
 github.com/piot/brook-go v0.0.0-20191112122856-044790a8729a h1:byqikXm+ERD8ZDJ1tsXXXefTDJl0Rsdvxr2LsjyQBig=
 github.com/piot/brook-go v0.0.0-20191112122856-044790a8729a/go.mod h1:XOBgIv7ob0m4m0noN1JVeuFrQs3LUxWdaFL+AyP6AGA=
 github.com/piot/brook-go v0.0.0-20200409185404-7adbdf4a3b3e h1:p8NBAJRtx0fcn+ahUG/ztUcfWNYcdcuVKrhSB7j+c4I=

@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/fatih/color v1.9.0
-	github.com/piot/brisk-protocol-go v0.0.0-20200316100235-a877de60fc6e
+	github.com/piot/brisk-protocol-go v0.0.0-20200428155813-6f31c92b4ce8
 	github.com/piot/brook-go v0.0.0-20200409185404-7adbdf4a3b3e
 	github.com/piot/chrono-go v0.0.0-20190815095431-7514a247e435
 	github.com/piot/log-go v0.0.0-20200413223422-b6d88c352f08
