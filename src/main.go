@@ -88,7 +88,8 @@ func main() {
 	log := clog.DefaultLog()
 	shouldDumpPackets := true
 	const frequency = 300
-	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, meta.Header{}, nil)
+	const disconnectTimeoutMs = uint(3000)
+	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, disconnectTimeoutMs, meta.Header{}, nil)
 	if instanceErr != nil {
 		log.Err(instanceErr)
 		return
