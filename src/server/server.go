@@ -46,8 +46,8 @@ type Server struct {
 }
 
 // New : Creates a new server
-func New(listenPort int, userServer connection.UserServer, updateFrequency int, log *clog.Log, dumpPackets bool, disconnectTimoutMs uint, header meta.Header, schemaPayload []byte) (*Server, int, error) {
-	connectionServer, foundPort, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, disconnectTimoutMs, header, schemaPayload, log)
+func New(listenPort int, userServer connection.UserServer, updateFrequency int, log *clog.Log, dumpPackets bool, disconnectTimoutMs uint, header meta.Header, schemaPayload []byte, findFreePort bool) (*Server, int, error) {
+	connectionServer, foundPort, serverErr := connection.NewServer(listenPort, userServer, dumpPackets, disconnectTimoutMs, header, schemaPayload, findFreePort, log)
 	if serverErr != nil {
 		return nil, 0, serverErr
 	}
