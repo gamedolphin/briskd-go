@@ -27,17 +27,18 @@ SOFTWARE.
 package main
 
 import (
-	"github.com/piot/log-go/src/clog"
-
 	"github.com/fatih/color"
 	"github.com/piot/brisk-protocol-go/src/commands"
 	"github.com/piot/brisk-protocol-go/src/communication"
 	"github.com/piot/brisk-protocol-go/src/connection"
 	"github.com/piot/brisk-protocol-go/src/meta"
-	"github.com/piot/briskd-go/src/server"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
+	"github.com/piot/log-go/src/clog"
+	"github.com/piot/log-go/src/clogint"
 	tend "github.com/piot/tend-go/src"
+
+	"github.com/piot/briskd-go/src/server"
 )
 
 type FakeConnection struct {
@@ -71,10 +72,13 @@ func (FakeConnection) SaveState(stream *outstream.OutStream) error {
 }
 
 type FakeServer struct {
+	log *clog.Log
 }
 
-func (FakeServer) CreateConnection(id connection.ID,
-	sessionID commands.UniqueSessionID) (communication.Connection, error) {
+func (f FakeServer) CreateConnection(id connection.ID,
+	sessionID commands.UniqueSessionID, info commands.ConnectInfo) (communication.Connection, error) {
+
+	f.log.Info("create connection", clog.Stringer("info", info))
 	return FakeConnection{}, nil
 }
 
@@ -83,13 +87,14 @@ func (FakeServer) Tick() {
 }
 
 func main() {
-	color.Cyan("briskd example server 0.2\n")
-	fakeServer := FakeServer{}
+	color.Cyan("briskd example server 0.3\n")
 	log := clog.DefaultLog()
+	fakeServer := FakeServer{log: log}
+	log.SetLogLevel(clogint.Trace)
 	shouldDumpPackets := true
 	const frequency = 300
 	const disconnectTimeoutMs = uint(3000)
-	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, disconnectTimeoutMs, meta.Header{}, nil)
+	instance, _, instanceErr := server.New(32002, fakeServer, frequency, log, shouldDumpPackets, disconnectTimeoutMs, meta.Header{}, nil, false)
 	if instanceErr != nil {
 		log.Err(instanceErr)
 		return

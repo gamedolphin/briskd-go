@@ -1,6 +1,1 @@
-name=briskd
-rm $name
-go build -o $name ../src
-
-./$name -color $@
-
+go run ../src/main.go -color $@
