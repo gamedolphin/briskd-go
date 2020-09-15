@@ -1,3 +1,5 @@
+github.com/coherence/brisk-protocol-go v0.0.0-20200915082437-458253841d53 h1:/DibU4LxLBkhLqJ7fprfoIa0IqLLFfL/oN/S09IU5Uk=
+github.com/coherence/brisk-protocol-go v0.0.0-20200915082437-458253841d53/go.mod h1:oDhKldHt39zvtDDwHvP1XHSdzgwGsNzIa0GrfkWQsUA=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0 h1:8xPHl4/q1VyqGIPif1F+1V3Y3lSmrq01EabUW3CoW5s=
@@ -15,8 +17,6 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
-github.com/piot/brisk-protocol-go v0.0.0-20200818210739-a9c77e8da509 h1:uslG0rhFEaDAB0eGVXdqotduc/EPP9UqaKUS4VzCjU0=
-github.com/piot/brisk-protocol-go v0.0.0-20200818210739-a9c77e8da509/go.mod h1:x0vVWcvPXFi1j9voezEOYz2D5o1Y+yBQS7fJGkLv034=
 github.com/piot/brook-go v0.0.0-20191112122856-044790a8729a h1:byqikXm+ERD8ZDJ1tsXXXefTDJl0Rsdvxr2LsjyQBig=
 github.com/piot/brook-go v0.0.0-20191112122856-044790a8729a/go.mod h1:XOBgIv7ob0m4m0noN1JVeuFrQs3LUxWdaFL+AyP6AGA=
 github.com/piot/brook-go v0.0.0-20200409185404-7adbdf4a3b3e h1:p8NBAJRtx0fcn+ahUG/ztUcfWNYcdcuVKrhSB7j+c4I=
@@ -25,18 +25,16 @@ github.com/piot/chrono-go v0.0.0-20190815095431-7514a247e435 h1:MaO7TOzbY8eQuEmC
 github.com/piot/chrono-go v0.0.0-20190815095431-7514a247e435/go.mod h1:njBMHPp9JBQ36wa5woYUjD2ey/iF3mKsDQsJ68tkD9M=
 github.com/piot/flux-go v0.0.0-20200316095810-526f20ff3cf6 h1:G0pKVy+s2c1/r2el0jrLcKzJct+OuRvz/bUvnm8Nc0U=
 github.com/piot/flux-go v0.0.0-20200316095810-526f20ff3cf6/go.mod h1:QfGo5wEEtgRiSHVz/Ev15pRmMuPTTnuE84fNouTYlso=
-github.com/piot/ibdf-go v0.0.0-20200430152944-085663ade7c6 h1:8mrKDreOu0ZS/EpBXDDLYFmJA6iFQJ7UKYfzjdQaH0Q=
-github.com/piot/ibdf-go v0.0.0-20200430152944-085663ade7c6/go.mod h1:rBQcNM9erft4QPO87TtivjJNOrSV61O1mI1in+qy5N4=
+github.com/piot/ibdf-go v0.0.0-20200827135312-fd9c4f030dd7 h1:rl2Ny6ONHQFlo29XLEHayKb7qO1WjgXXbUhFGiAdbNM=
+github.com/piot/ibdf-go v0.0.0-20200827135312-fd9c4f030dd7/go.mod h1:MnOU9aGpddEJk/zYPLxhAyhHVM+TH8mc6ioVfo7RUh8=
 github.com/piot/log-go v0.0.0-20191014203607-09e9b309a41b h1:FUqUU8h3IZe1L1NqkpaJnz7vLF4Fo2/z7VbxgpEhLww=
 github.com/piot/log-go v0.0.0-20191014203607-09e9b309a41b/go.mod h1:pZwcBRw/9V9K7Z1MMHW+mlx/xkOhqZR+sWarMTR0Ucs=
-github.com/piot/log-go v0.0.0-20200413223422-b6d88c352f08 h1:vvfC7JOogeF7Voc/qTSjFY2V3TCrYgmblxbvuUzPh8k=
-github.com/piot/log-go v0.0.0-20200413223422-b6d88c352f08/go.mod h1:pZwcBRw/9V9K7Z1MMHW+mlx/xkOhqZR+sWarMTR0Ucs=
 github.com/piot/log-go v0.0.0-20200507161613-fdc96863c75a h1:klf7knXlkklqf86BwvVdR2ePUMh7LCTRON5lhCl4dWQ=
 github.com/piot/log-go v0.0.0-20200507161613-fdc96863c75a/go.mod h1:pZwcBRw/9V9K7Z1MMHW+mlx/xkOhqZR+sWarMTR0Ucs=
 github.com/piot/monotonic-time-go v0.0.0-20191201132620-442fca68fe00 h1:VprceOSrBDVoENwVlPFL4f/qQWC4V5BCHVpHYi6rKaw=
 github.com/piot/monotonic-time-go v0.0.0-20191201132620-442fca68fe00/go.mod h1:QqCttVb94PC3F2xioLeoUnmad1TCNAzOtrxq5dfOOaA=
-github.com/piot/piff-go v0.0.0-20191127155735-801ce06497bb h1:ncz1fxN1ed18fA9jz65b9eba5+HyWyS0EqKGNC6jIzg=
-github.com/piot/piff-go v0.0.0-20191127155735-801ce06497bb/go.mod h1:2WykDczzZWNrxkBPcWvQFD/j4xwatsYMauHZPe4iZu8=
+github.com/piot/piff-go v0.0.0-20200827132713-6c58cfc405b2 h1:6IWVnphEJcvo9euckEKAcE+WNsQwUyQzlodkUXrGC1E=
+github.com/piot/piff-go v0.0.0-20200827132713-6c58cfc405b2/go.mod h1:2WykDczzZWNrxkBPcWvQFD/j4xwatsYMauHZPe4iZu8=
 github.com/piot/tend-go v0.0.0-20200206141134-f2e25833ea36 h1:a8jqPpKeHkUsCAI8eBt82xMOXG3e2W2j1769+FGNXKo=
 github.com/piot/tend-go v0.0.0-20200206141134-f2e25833ea36/go.mod h1:Ic+rfXOVMBub88LKxPOx9C+LQBMVviqdapFRURNRgAc=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
@@ -49,5 +47,3 @@ golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 h1:uYVVQ9WP/Ds2ROhcaGPeIdVq0RIXVLwsHlnvJ+cT1So=
 golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20200430082407-1f5687305801 h1:Jp2/1+ZY++XrlALjnberpN8QkAUPNLkIjQIMInPpQxc=
-golang.org/x/sys v0.0.0-20200430082407-1f5687305801/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

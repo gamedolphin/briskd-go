@@ -27,18 +27,17 @@ SOFTWARE.
 package main
 
 import (
+	"github.com/coherence/brisk-protocol-go/src/commands"
+	"github.com/coherence/brisk-protocol-go/src/communication"
+	"github.com/coherence/brisk-protocol-go/src/connection"
+	"github.com/coherence/brisk-protocol-go/src/meta"
+	"github.com/coherence/briskd-go/src/server"
 	"github.com/fatih/color"
-	"github.com/piot/brisk-protocol-go/src/commands"
-	"github.com/piot/brisk-protocol-go/src/communication"
-	"github.com/piot/brisk-protocol-go/src/connection"
-	"github.com/piot/brisk-protocol-go/src/meta"
 	"github.com/piot/brook-go/src/instream"
 	"github.com/piot/brook-go/src/outstream"
 	"github.com/piot/log-go/src/clog"
 	"github.com/piot/log-go/src/clogint"
 	tend "github.com/piot/tend-go/src"
-
-	"github.com/piot/briskd-go/src/server"
 )
 
 type FakeConnection struct {

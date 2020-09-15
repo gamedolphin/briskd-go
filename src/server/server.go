@@ -29,10 +29,9 @@ package server
 import (
 	"fmt"
 
+	"github.com/coherence/brisk-protocol-go/src/connection"
+	"github.com/coherence/brisk-protocol-go/src/meta"
 	"github.com/piot/chrono-go/src/chrono"
-
-	"github.com/piot/brisk-protocol-go/src/connection"
-	"github.com/piot/brisk-protocol-go/src/meta"
 	"github.com/piot/log-go/src/clog"
 )
 
