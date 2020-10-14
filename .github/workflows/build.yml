@@ -1,4 +1,4 @@
-name: Go
+name: Build
 on: [push]
 jobs:
   build:
@@ -9,13 +9,12 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.13
-        id: go
 
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       #- name: Linting
-      #  uses: piot/action-go-lint@master
+      #  uses: coherence/action-go-lint@v1
 
       - name: Build
         run: go build -v ./...
